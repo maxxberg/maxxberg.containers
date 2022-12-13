@@ -1,0 +1,43 @@
+version: '3'
+
+networks:
+    {{ backend_network }}:
+        external: true
+    default:
+        #enable_ipv6: true
+        driver: bridge
+
+services:
+  reverse-proxy:
+    # The official v2 Traefik docker image
+    image: traefik:v2.8
+    # Enables the web UI and tells Traefik to listen to docker
+    #command: --api.insecure=true --providers.docker --pilot.dashboard=false --providers.docker.exposedByDefault=false
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+{% if api_insecure == 'true' %}
+      - "8080:8080"
+{% endif %}
+      - "443:443"
+    environment:
+      - "HETZNER_API_KEY={{ hetzner_api_key | default('invalid') }}"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      #- /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.yaml:/etc/traefik/traefik.yaml
+    networks:
+        {{ backend_network }}:
+        default:
+    restart: always
+
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    expose:
+      - "2375"
+    environment:
+      - "CONTAINERS=1"
+    restart: always

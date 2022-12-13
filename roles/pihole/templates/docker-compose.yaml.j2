@@ -1,0 +1,56 @@
+version: "3"
+
+volumes:
+  pihole_conf:
+    external: true
+  pihole_dnsmasq:
+    external: true
+
+networks: 
+  web_backend:
+      external: true
+  intranet:
+      external: true
+
+# More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    environment:
+      TZ: 'Europe/Berlin'
+      WEBPASSWORD: {{ web_password }}
+      ServerIP: {{ ipv4_address }}
+      DNSMASQ_LISTENING: all
+      PIHOLE_DNS_: '1.1.1.1;1.0.0.1'
+    # Volumes store your data between container upgrades
+    volumes:
+      - pihole_conf:/etc/pihole/
+      - pihole_dnsmasq:/etc/dnsmasq.d/
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+    # Recommended but not required (DHCP needs NET_ADMIN)
+    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+   # cap_add:
+   #   - NET_ADMIN
+    restart: always
+    networks:
+      default:
+      intranet:
+        ipv4_address: {{ ipv4_address }}
+
+#  dnsmasq:
+#    restart: always
+#    image: docker.io/strm/dnsmasq
+#    command: --all-servers
+#    volumes:
+#      - ./dnsmasq.conf:/etc/dnsmasq.conf
+#    expose:
+#      - "53/udp"
+#    networks:
+#      default:
+#      intranet:
+#        ipv4_address: {{ dnsmasq_ipv4_address }}
+#    cap_add:
+#      - NET_ADMIN

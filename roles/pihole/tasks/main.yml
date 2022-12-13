@@ -1,0 +1,53 @@
+---
+# tasks file for maxxberg.pihole
+
+- name: Docker - Create volumes
+  docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - pihole_conf
+    - pihole_dnsmasq
+    
+- name: Create project directotory
+  file:
+    path: docker-compose/pihole
+    state: directory
+
+- name: Create docker-compose.yaml
+  template:
+    src: docker-compose.yaml.j2
+    dest: docker-compose/pihole/docker-compose.yaml
+    force: yes
+
+- name: Create docker networks - intranet
+  docker_network:
+    name: intranet
+    internal: yes
+    state: present
+    ipam_config:
+    - subnet: "{{ intranet_network | mandatory }}"
+
+
+- name: Create dnsmasq config
+  copy:
+    dest: "{{ data_path | default('/var/lib/docker/') + 'volumes/pihole_dnsmasq/_data/02-custom.conf' }}"
+    content: |
+      all-servers
+
+# - name: Create dnsmasq config
+#   copy:
+#     dest: docker-compose/pihole/dnsmasq.conf
+#     content: |
+#       #dont use hosts nameservers
+#       no-resolv
+#       #use google as default nameservers
+#       server=9.9.9.11
+#       server=9.9.9.9
+#       server=1.1.1.1
+
+- name: Docker - pihole
+  docker_compose:
+    project_src: docker-compose/pihole/
+    state: present
+    pull: yes

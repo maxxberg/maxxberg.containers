@@ -1,0 +1,4 @@
+---
+# defaults file for maxxberg.onlyoffice-ds
+hostname: ods.cloud.mx-berg.de
+state: present

@@ -1,0 +1,50 @@
+version: '3'
+
+volumes:
+  subspace_data:
+    external: true
+
+networks: 
+  web_backend:
+      external: true
+  intranet:
+      external: true
+
+services:
+  app:
+    image: subspacecommunity/subspace:latest
+    hostname: subspace-wg
+    restart: always
+    expose:
+      - "80"
+    ports:
+      - 51820:51820/udp
+    volumes:
+      - subspace_data:/data
+    environment:
+     -  VIRTUAL_HOST={{ hostname }}
+     -  VIRTUAL_PORT=80
+     -  VIRTUAL_PROTO=http
+     -  LETSENCRYPT_HOST={{ hostname }}
+     -  SUBSPACE_HTTP_HOST={{ hostname }}
+     -  SUBSPACE_LETSENCRYPT=false
+     -  SUBSPACE_HTTP_ADDR=":80"
+     -  SUBSPACE_HTTP_INSECURE=false
+     -  SUBSPACE_NAMESERVER={{ nameserver }}
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.services.subspace-sec.loadbalancer.server.port=80"
+    - "traefik.http.routers.subspace-sec.rule=Host(`{{ hostname }}`)"
+    - "traefik.docker.network=web_backend"
+    - "traefik.http.routers.subspace-sec.tls=true"
+    - "traefik.http.routers.subspace-sec.tls.certResolver=letsdns"
+    - "traefik.http.routers.subspace.rule=Host(`{{ hostname }}`)"
+    - "traefik.http.routers.subspace.middlewares=redirect-to-https@file"
+    cap_add:
+      - "NET_ADMIN"
+    networks: 
+      web_backend:
+        aliases: 
+          - subspace-wg
+      intranet:
+    dns: {{ nameserver }}

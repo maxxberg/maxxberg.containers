@@ -1,0 +1,57 @@
+providers:
+  docker: 
+    exposedByDefault: false
+    endpoint: "tcp://docker-proxy:2375"
+  file:
+    directory: /etc/traefik/
+api:
+  dashboard: {{ api_dashboard }}
+  insecure: {{ api_insecure }}
+pilot:
+  dashboard: false
+
+entryPoints:
+  http:
+    address: ":80"
+  https:
+    address: ":443"
+
+certificatesResolvers:
+  letsdnstest:
+    acme:
+      caServer: https://acme-staging-v02.api.letsencrypt.org/directory
+      email: orik10@web.de
+      storage: acme.json
+      dnsChallenge:
+        provider: hetzner
+  letsdns:
+    acme:
+      email: orik10@web.de
+      storage: acme.json
+      dnsChallenge:
+        provider: hetzner
+        
+http:
+  middlewares:
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+    security_headers:
+      headers:
+        stsSeconds: 15552000 
+{% if middlewares is defined %}
+    {{ middlewares | default() | to_nice_yaml(indent=2) | indent(4) }}
+{% endif %}
+{% if services is defined %}
+  services:
+    {{ services | default() | to_nice_yaml(indent=2) | indent(4) }}
+{% endif %}
+{% if routers is defined %}
+  routers:
+    {{ routers | default() | to_nice_yaml(indent=2) | indent(4) }}
+{% endif %}
+
+accessLog: {}
+log:
+  level: warn

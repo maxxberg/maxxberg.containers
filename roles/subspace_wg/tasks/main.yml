@@ -1,0 +1,34 @@
+---
+# tasks file for maxxberg.subspace-wg
+
+- name: Docker - Create volumes
+  docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - subspace_data
+
+- name: Create docker networks - intranet
+  docker_network:
+    name: intranet
+    internal: yes
+    state: present
+    ipam_config:
+    - subnet: "{{ intranet_network | mandatory }}"
+
+- name: Create project directotory
+  file:
+    path: docker-compose/subspace-wg
+    state: directory
+
+- name: Create docker-compose.yaml
+  template:
+    src: docker-compose.yaml.j2
+    dest: docker-compose/subspace-wg/docker-compose.yaml
+    force: yes
+
+- name: Docker - Subspace-wg
+  docker_compose:
+    project_src: docker-compose/subspace-wg/
+    state: "{{ state }}"
+    pull: yes

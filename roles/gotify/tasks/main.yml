@@ -1,0 +1,53 @@
+---
+# tasks file for maxxberg.gotify
+- name: Docker - Create volumes
+  docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - gotify_data
+
+#- name: Create docker networks - db_net
+#  docker_network:
+#    name: db_backend
+#    internal: yes
+#    state: present
+
+- name: Create docker networks - web_backend
+  docker_network:
+    name: web_backend
+    internal: yes
+    state: present
+
+#- name: Upload files
+#  copy:
+#    src: cloud
+#    dest: docker-compose/
+- name: Create project directotory
+  file:
+    path: docker-compose/gotify
+    state: directory
+
+- name: Create docker-compose.yaml
+  template:
+    src: docker-compose.yaml.j2
+    dest: docker-compose/gotify/docker-compose.yaml
+    force: yes
+
+#- name: Create nextcloud.env
+#  template:
+#    src: nextcloud.env.j2
+#    dest: docker-compose/cloud/nextcloud.env
+#    force: yes#
+
+#- name: Create mariadb.env
+#  template:
+#    src: mariadb.env.j2
+#    dest: docker-compose/cloud/mariadb.env
+#    force: yes
+
+- name: Docker - Gotify
+  docker_compose:
+    project_src: docker-compose/gotify/
+    state: present
+    pull: yes

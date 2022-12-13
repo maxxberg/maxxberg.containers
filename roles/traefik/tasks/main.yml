@@ -1,0 +1,30 @@
+---
+# tasks file for maxxberg.traefik
+
+- name: Create docker networks - web_backend
+  docker_network:
+    name: "{{ backend_network }}"
+    internal: yes
+    state: present
+
+- name: Create project directotory
+  file:
+    path: docker-compose/traefik
+    state: directory
+
+- name: upload config file
+  template:
+    src: traefik.yaml.j2
+    dest: docker-compose/traefik/traefik.yaml
+
+- name: Create docker-compose.yaml
+  template:
+    src: docker-compose.yaml.j2
+    dest: docker-compose/traefik/docker-compose.yaml
+    force: yes
+
+- name: Docker - Traefik
+  docker_compose:
+    project_src: docker-compose/traefik/
+    state: present
+    pull: yes

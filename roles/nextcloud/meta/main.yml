@@ -1,0 +1,9 @@
+#dependencies:
+#  - src: git@github.com:maxxberg/ansible-maxxberg.docker.git
+#    scm: git
+#    version: master
+#    name: maxxberg.docker
+#  - src: git@github.com:maxxberg/ansible-maxxberg.traefik.git
+#    scm: git
+#    version: master
+#    name: maxxberg.traefik

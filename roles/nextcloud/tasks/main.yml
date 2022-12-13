@@ -1,0 +1,54 @@
+- name: Docker - Create volumes
+  docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - nxc_data
+    - nxc_config
+    - nxc_custom_apps
+    - nxc_mariadb_data
+
+#- name: Create docker networks - db_net
+#  docker_network:
+#    name: db_backend
+#    internal: yes
+#    state: present
+
+- name: Create docker networks - web_backend
+  docker_network:
+    name: web_backend
+    internal: yes
+    state: present
+
+#- name: Upload files
+#  copy:
+#    src: cloud
+#    dest: docker-compose/
+- name: Create project directotory
+  file:
+    path: docker-compose/cloud
+    state: directory
+
+- name: Create docker-compose.yaml
+  template:
+    src: docker-compose.yaml.j2
+    dest: docker-compose/cloud/docker-compose.yaml
+    force: yes
+
+#- name: Create nextcloud.env
+#  template:
+#    src: nextcloud.env.j2
+#    dest: docker-compose/cloud/nextcloud.env
+#    force: yes#
+
+#- name: Create mariadb.env
+#  template:
+#    src: mariadb.env.j2
+#    dest: docker-compose/cloud/mariadb.env
+#    force: yes
+
+- name: Docker - Nextcloud
+  docker_compose:
+    project_src: docker-compose/cloud/
+    state: present
+    pull: yes

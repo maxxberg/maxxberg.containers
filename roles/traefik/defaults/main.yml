@@ -1,0 +1,4 @@
+---
+# defaults file for maxxberg.traefik
+api_dashboard: false
+api_insecure: false
