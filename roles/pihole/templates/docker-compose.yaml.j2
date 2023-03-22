@@ -16,7 +16,7 @@ networks:
 services:
   pihole:
     container_name: pihole
-    image: pihole/pihole:latest
+    image: docker.io/pihole/pihole:latest
     environment:
       TZ: 'Europe/Berlin'
       WEBPASSWORD: {{ web_password }}
@@ -27,6 +27,10 @@ services:
     volumes:
       - pihole_conf:/etc/pihole/
       - pihole_dnsmasq:/etc/dnsmasq.d/
+{% if is_home_network==true %}
+    ports:
+      - "53:53"
+{% endif %}
     dns:
       - 127.0.0.1
       - 1.1.1.1
