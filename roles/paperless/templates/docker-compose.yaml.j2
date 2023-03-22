@@ -1,0 +1,79 @@
+version: "3.4"
+
+volumes:
+  {{ project_name }}_data:
+    external: true
+  {{ project_name }}_media:
+    external: true
+  {{ project_name }}_dbdata:
+    external: true
+  {{ project_name }}_redisdata:
+    external: true
+
+networks:
+  default:
+  web_backend:
+      external: true
+
+services:
+  broker:
+    image: docker.io/library/redis:7
+    restart: unless-stopped
+    volumes:
+      - {{ project_name }}_redisdata:/data
+
+  db:
+    image: docker.io/library/mariadb:10
+    restart: unless-stopped
+    volumes:
+      - {{ project_name }}_dbdata:/var/lib/mysql
+    environment:
+      MARIADB_HOST: db
+      MARIADB_DATABASE: paperless
+      MARIADB_USER: paperless
+      MARIADB_PASSWORD: paperless
+      MARIADB_ROOT_PASSWORD: paperless
+
+  webserver:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: unless-stopped
+    depends_on:
+      - db
+      - broker
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - {{ project_name }}_data:/usr/src/paperless/data:Z
+      - {{ project_name }}_media:/usr/src/paperless/media:Z
+      - ./export:/usr/src/paperless/export
+      - ./consume:/usr/src/paperless/consume
+    networks:
+      - default
+      - web_backend
+    #env_file: docker-compose.env
+    environment:
+      PAPERLESS_REDIS: redis://broker:6379
+      PAPERLESS_DBENGINE: mariadb
+      PAPERLESS_DBHOST: db
+      PAPERLESS_DBUSER: paperless # only needed if non-default username
+      PAPERLESS_DBPASS: paperless # only needed if non-default password
+      PAPERLESS_DBPORT: 3306
+      USERMAP_UID: 1000
+      USERMAP_GID: 1000
+      PAPERLESS_URL: "https://{{ domain }}"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.paperless-sec.loadbalancer.server.port=80"
+      - "traefik.http.routers.paperless-sec.rule=Host(`{{ domain }}`)"
+      - "traefik.docker.network=web_backend"
+      - "traefik.http.routers.paperless-sec.tls=true"
+      - "traefik.http.routers.paperless-sec.tls.certResolver=letsdns"
+      - "traefik.http.routers.paperless.rule=Host(`{{ domain }}`)"
+      - "traefik.http.routers.paperless.middlewares=redirect-to-https@file"
+      - "traefik.http.routers.paperless-sec.middlewares=security_headers@file"
+
