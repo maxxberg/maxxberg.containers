@@ -1,0 +1,21 @@
+---
+
+- name: Prepare Systemd for docker
+  file:
+    path: /etc/systemd/system/docker.service.d
+    state: directory
+
+ 
+- name: Copy System file
+  template:
+    src: systemd-docker-args.conf.j2
+    dest: /etc/systemd/system/docker.service.d/00-execstart.conf
+    force: yes
+  when: data_path is defined
+
+- name: Install docker
+  include_role:
+    name: geerlingguy.docker
+  vars:
+    docker_install_compose: true
+
