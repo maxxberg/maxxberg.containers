@@ -10,7 +10,7 @@ networks:
 services:
   reverse-proxy:
     # The official v2 Traefik docker image
-    image: traefik:v2.8
+    image: traefik:v2.9
     # Enables the web UI and tells Traefik to listen to docker
     #command: --api.insecure=true --providers.docker --pilot.dashboard=false --providers.docker.exposedByDefault=false
     ports:
@@ -26,7 +26,7 @@ services:
     volumes:
       # So that Traefik can listen to the Docker events
       #- /var/run/docker.sock:/var/run/docker.sock
-      - ./traefik.yaml:/etc/traefik/traefik.yaml
+      - ./traefik.yaml:/etc/traefik/traefik.yaml:Z
     networks:
         {{ backend_network }}:
         default:
@@ -35,9 +35,10 @@ services:
   docker-proxy:
     image: tecnativa/docker-socket-proxy:latest
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:Z
     expose:
       - "2375"
     environment:
       - "CONTAINERS=1"
+    privileged: true
     restart: always
