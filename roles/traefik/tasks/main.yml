@@ -2,15 +2,24 @@
 # tasks file for maxxberg.traefik
 
 - name: Create docker networks - web_backend
-  docker_network:
+  community.docker.docker_network:
     name: "{{ backend_network }}"
-    internal: yes
+    internal: true
     state: present
+  when: container_engine == "docker"
+
+- name: Create docker networks - web_backend
+  containers.podman.podman_network:
+    name: "{{ backend_network }}"
+    internal: true
+    state: present
+  when: container_engine == "podman"
 
 - name: Create project directotory
-  file:
+  ansible.builtin.file:
     path: docker-compose/traefik
     state: directory
+    mode: "0755"
 
 - name: upload config file
   template:
@@ -27,4 +36,4 @@
   docker_compose:
     project_src: docker-compose/traefik/
     state: present
-    pull: yes
+    pull: true

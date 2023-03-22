@@ -8,32 +8,35 @@
   loop:
     - pihole_conf
     - pihole_dnsmasq
-    
+
 - name: Create project directotory
-  file:
+  ansible.builtin.file:
     path: docker-compose/pihole
     state: directory
+    mode: "0755"
 
 - name: Create docker-compose.yaml
-  template:
+  ansible.builtin.template:
     src: docker-compose.yaml.j2
     dest: docker-compose/pihole/docker-compose.yaml
-    force: yes
+    force: true
+    mode: "0755"
 
 - name: Create docker networks - intranet
-  docker_network:
+  community.docker.docker_network:
     name: intranet
-    internal: yes
+    internal: true
     state: present
     ipam_config:
-    - subnet: "{{ intranet_network | mandatory }}"
+      - subnet: "{{ intranet_network | mandatory }}"
 
 
 - name: Create dnsmasq config
-  copy:
+  ansible.builtin.copy:
     dest: "{{ data_path | default('/var/lib/docker/') + 'volumes/pihole_dnsmasq/_data/02-custom.conf' }}"
     content: |
       all-servers
+    mode: "0755"
 
 # - name: Create dnsmasq config
 #   copy:
@@ -46,8 +49,32 @@
 #       server=9.9.9.9
 #       server=1.1.1.1
 
+
+- name: Docker - pull image
+  community.docker.docker_image:
+    name: docker.io/pihole/pihole:latest
+    state: present
+    source: pull
+
+- name: Disable systemd-resolved
+  ansible.builtin.systemd:
+    name: systemd-resolved
+    state: stopped
+    enabled: false
+  when:
+    - state == "present"
+    - is_home_network
+
+- name: Enable systemd-resolved
+  ansible.builtin.systemd:
+    name: systemd-resolved
+    state: started
+    enabled: true
+  when:
+    - state == "absent"
+    - not is_home_network
+
 - name: Docker - pihole
-  docker_compose:
+  community.docker.docker_compose:
     project_src: docker-compose/pihole/
     state: present
-    pull: yes
