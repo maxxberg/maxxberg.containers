@@ -12,6 +12,10 @@ services:
     restart: always
     expose:
       - "80"
+    ulimits:
+     nofile:
+       soft: "65536"
+       hard: "65536"
     environment:
     - VIRTUAL_HOST={{ hostname }}
     - VIRTUAL_PORT=80
