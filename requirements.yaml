@@ -1,4 +1,0 @@
-collections:
-  - community.docker
-roles:
-  - geerlingguy.docker
