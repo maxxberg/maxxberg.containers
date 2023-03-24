@@ -1,0 +1,18 @@
+docker_compose:
+  volumes:
+    data:
+      type: volume
+      name: nxc_data
+      owner:
+    config:
+      type: volume
+      name: nxc_config
+      owner:
+    custom_apps:
+      type: volume
+      name: nxc_custom_apps
+      owner:
+    mariadb_data:
+      type: volume
+      name: nxc_mariadb_data      
+      owner:

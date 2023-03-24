@@ -1,8 +1,10 @@
 version: '3'
 
 volumes:
-  nxc_data:
+{% if docker_compose.volumes.data.type == 'volume' %}
+  {{ docker_compose.volumes.data.name }}:
     external: true
+{% endif %}
   nxc_custom_apps:
     external: true
   nxc_config:
@@ -47,7 +49,7 @@ services:
       - "80"
     volumes:
       - nxc_html:/var/www/html
-      - nxc_data:/var/www/html/data
+      - {{ docker_compose.volumes.data.name }}:/var/www/html/data
       - nxc_custom_apps:/var/www/html/custom_apps
       - nxc_config:/var/www/html/config
     environment:
