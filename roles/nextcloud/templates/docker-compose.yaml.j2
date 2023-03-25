@@ -20,7 +20,7 @@ networks:
 
 services:
   db:
-    image: mariadb:10.5
+    image: docker.io/library/mariadb:10.6
     hostname: db
     command: --transaction-isolation=READ-COMMITTED --log-bin --binlog-format=ROW
     volumes:
@@ -38,7 +38,7 @@ services:
           - db
 
   app:
-    image: nextcloud:{{ nextcloud_version }}
+    image: docker.io/library/nextcloud:{{ nextcloud_version }}
     hostname: nextcloud
     #ports:
      # - "80"
@@ -50,12 +50,16 @@ services:
       - {{ docker_compose.volumes.data.name }}:/var/www/html/data{% if docker_compose.volumes.data.type == 'bindmount' %}:z{% endif +%}
       - nxc_custom_apps:/var/www/html/custom_apps
       - nxc_config:/var/www/html/config
+    depends_on:
+      - db
+      - redis
     environment:
       - MYSQL_HOST=db
       - MYSQL_DATABASE={{ db_name }}
       - MYSQL_USER={{ db_user }}
       - MYSQL_PASSWORD={{ db_password }}
       - MYSQL_ROOT_PASSWORD={{ db_root_password }}
+      - REDIS_HOST=redis
 {% if reverse_proxy == 'nginx'  %}
       - VIRTUAL_HOST={{ domain }}
       - VIRTUAL_PORT=80
@@ -83,7 +87,7 @@ services:
       - web_backend
       - default
   cron:
-    image: nextcloud:{{ nextcloud_version }}
+    image: docker.io/library/nextcloud:{{ nextcloud_version }}
     volumes:
       - nxc_html:/var/www/html
       - {{ docker_compose.volumes.data.name }}:/var/www/html/data{% if docker_compose.volumes.data.type == 'bindmount' %}:z{% endif +%}
@@ -102,3 +106,7 @@ services:
     networks: 
       - web_backend
       - default
+
+  redis:
+    image: docker.io/library/redis:alpine
+    restart: always
