@@ -88,7 +88,7 @@ services:
     image: nextcloud:{{ nextcloud_version }}
     volumes:
       - nxc_html:/var/www/html
-      - {{ docker_compose.volumes.data.name }}:/var/www/html/data{% if docker_compose.volumes.data.type == 'bindmount' %}:Z{% endif -%}
+      - {{ docker_compose.volumes.data.name }}:/var/www/html/data{% if docker_compose.volumes.data.type == 'bindmount' %}:Z{% endif +%}
       - nxc_custom_apps:/var/www/html/custom_apps
       - nxc_config:/var/www/html/config
     environment:
