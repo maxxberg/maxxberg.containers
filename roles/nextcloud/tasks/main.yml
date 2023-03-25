@@ -10,6 +10,14 @@
     path: "{{ item.value.name }}"
     state: directory
     mode: "0755"
+  when: item.value.type == 'bindmount'
+  loop: "{{ docker_compose.volumes | dict2items }}"
+
+- name: Create need directories
+  ansible.builtin.file:
+    path: "{{ item.value.name }}"
+    state: directory
+    mode: "0755"
     owner: "{{ item.value.owner }}"
     group: "{{ item.value.owner }}"
   when: item.value.type == 'bindmount'
