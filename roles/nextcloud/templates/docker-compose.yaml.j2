@@ -17,13 +17,11 @@ volumes:
 networks: 
   web_backend:
       external: true
-  db_backend:
-    external: true
 
 services:
   db:
     image: mariadb:10.5
-    hostname: mariadb
+    hostname: db
     command: --transaction-isolation=READ-COMMITTED --log-bin --binlog-format=ROW
     volumes:
       - nxc_mariadb_data:/var/lib/mysql
