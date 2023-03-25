@@ -1,8 +1,10 @@
 version: '3'
 
 volumes:
-  nxc_data:
+{% if docker_compose.volumes.data.type == 'volume' %}
+  {{ docker_compose.volumes.data.name }}:
     external: true
+{% endif %}
   nxc_custom_apps:
     external: true
   nxc_config:
@@ -15,13 +17,11 @@ volumes:
 networks: 
   web_backend:
       external: true
-  db_backend:
-    external: true
 
 services:
   db:
     image: mariadb:10.5
-    hostname: mariadb
+    hostname: db
     command: --transaction-isolation=READ-COMMITTED --log-bin --binlog-format=ROW
     volumes:
       - nxc_mariadb_data:/var/lib/mysql
@@ -47,7 +47,7 @@ services:
       - "80"
     volumes:
       - nxc_html:/var/www/html
-      - nxc_data:/var/www/html/data
+      - {{ docker_compose.volumes.data.name }}:/var/www/html/data{% if docker_compose.volumes.data.type == 'bindmount' %}:z{% endif +%}
       - nxc_custom_apps:/var/www/html/custom_apps
       - nxc_config:/var/www/html/config
     environment:
@@ -86,7 +86,7 @@ services:
     image: nextcloud:{{ nextcloud_version }}
     volumes:
       - nxc_html:/var/www/html
-      - nxc_data:/var/www/html/data
+      - {{ docker_compose.volumes.data.name }}:/var/www/html/data{% if docker_compose.volumes.data.type == 'bindmount' %}:z{% endif +%}
       - nxc_custom_apps:/var/www/html/custom_apps
       - nxc_config:/var/www/html/config
     environment:

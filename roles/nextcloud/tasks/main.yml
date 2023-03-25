@@ -1,14 +1,29 @@
 - name: Docker - Create volumes
   docker_volume:
-    name: "{{ item }}"
+    name: "{{ item.value.name }}"
     state: present
-  loop:
-    - nxc_data
-    - nxc_config
-    - nxc_custom_apps
-    - nxc_mariadb_data
+  when: item.value.type == 'volume'
+  loop: "{{ docker_compose.volumes | dict2items }}"
 
-#- name: Create docker networks - db_net
+- name: Create need directories
+  ansible.builtin.file:
+    path: "{{ item.value.name }}"
+    state: directory
+    mode: "0755"
+  when: item.value.type == 'bindmount'
+  loop: "{{ docker_compose.volumes | dict2items }}"
+
+- name: Create need directories
+  ansible.builtin.file:
+    path: "{{ item.value.name }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ item.value.owner }}"
+    group: "{{ item.value.owner }}"
+  when: item.value.type == 'bindmount'
+  loop: "{{ docker_compose.volumes | dict2items }}"
+
+# - name: Create docker networks - db_net
 #  docker_network:
 #    name: db_backend
 #    internal: yes
@@ -17,38 +32,41 @@
 - name: Create docker networks - web_backend
   docker_network:
     name: web_backend
-    internal: yes
+    internal: true
     state: present
 
-#- name: Upload files
+# - name: Upload files
 #  copy:
 #    src: cloud
 #    dest: docker-compose/
+
 - name: Create project directotory
-  file:
+  ansible.builtin.file:
     path: docker-compose/cloud
     state: directory
+    mode: "0755"
 
 - name: Create docker-compose.yaml
-  template:
+  ansible.builtin.template:
     src: docker-compose.yaml.j2
     dest: docker-compose/cloud/docker-compose.yaml
-    force: yes
+    force: true
+    mode: "0755"
 
-#- name: Create nextcloud.env
+# - name: Create nextcloud.env
 #  template:
 #    src: nextcloud.env.j2
 #    dest: docker-compose/cloud/nextcloud.env
 #    force: yes#
 
-#- name: Create mariadb.env
+# - name: Create mariadb.env
 #  template:
 #    src: mariadb.env.j2
 #    dest: docker-compose/cloud/mariadb.env
 #    force: yes
 
 - name: Docker - Nextcloud
-  docker_compose:
+  community.docker.docker_compose:
     project_src: docker-compose/cloud/
     state: present
-    pull: yes
+    pull: true
