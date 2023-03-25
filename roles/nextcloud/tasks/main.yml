@@ -1,17 +1,17 @@
 - name: Docker - Create volumes
   docker_volume:
-    name: "{{ item.name }}"
+    name: "{{ item.value.name }}"
     state: present
-  when: item.type == 'volume'
+  when: item.value.type == 'volume'
   loop: "{{ docker_compose.volumes | dict2items }}"
 
 - name: Create need directories
   ansible.builtin.file:
-    path: "{{ item.name }}"
+    path: "{{ item.value.name }}"
     state: directory
     mode: "0755"
-    owner: "{{ item.owner }}"
-  when: item.type == 'bindmount'
+    owner: "{{ item.value.owner }}"
+  when: item.value.type == 'bindmount'
   loop: "{{ docker_compose.volumes | dict2items }}"
 
 # - name: Create docker networks - db_net
