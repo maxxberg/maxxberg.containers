@@ -14,5 +14,5 @@ docker_compose:
       owner:
     mariadb_data:
       type: volume
-      name: nxc_mariadb_data      
+      name: nxc_mariadb_data
       owner:
