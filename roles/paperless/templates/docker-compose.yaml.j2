@@ -72,7 +72,7 @@ services:
       - "traefik.http.routers.paperless-sec.rule=Host(`{{ domain }}`)"
       - "traefik.docker.network=web_backend"
       - "traefik.http.routers.paperless-sec.tls=true"
-      - "traefik.http.routers.paperless-sec.tls.certResolver=letsdns"
+      - "traefik.http.routers.paperless-sec.tls.certResolver={{ certificate_resolver }}"
       - "traefik.http.routers.paperless.rule=Host(`{{ domain }}`)"
       - "traefik.http.routers.paperless.middlewares=redirect-to-https@file"
       - "traefik.http.routers.paperless-sec.middlewares=security_headers@file"
