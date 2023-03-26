@@ -31,8 +31,8 @@ services:
       MARIADB_HOST: db
       MARIADB_DATABASE: paperless
       MARIADB_USER: paperless
-      MARIADB_PASSWORD: {{ db_password }}
-      MARIADB_ROOT_PASSWORD: {{ db_root_password }}
+      MARIADB_PASSWORD: '{{ db_password }}'
+      MARIADB_ROOT_PASSWORD: '{{ db_root_password }}'
 
   webserver:
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
@@ -61,7 +61,7 @@ services:
       PAPERLESS_DBENGINE: mariadb
       PAPERLESS_DBHOST: db
       PAPERLESS_DBUSER: paperless # only needed if non-default username
-      PAPERLESS_DBPASS: {{ db_password }} # only needed if non-default password
+      PAPERLESS_DBPASS: '{{ db_password }}' # only needed if non-default password
       PAPERLESS_DBPORT: 3306
       USERMAP_UID: 1000
       USERMAP_GID: 1000
