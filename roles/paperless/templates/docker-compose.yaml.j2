@@ -48,8 +48,8 @@ services:
       timeout: 10s
       retries: 5
     volumes:
-      - {{ project_name }}_data:/usr/src/paperless/data:Z
-      - {{ project_name }}_media:/usr/src/paperless/media:Z
+      - {{ project_name }}_data:/usr/src/paperless/data
+      - {{ project_name }}_media:/usr/src/paperless/media
       - {{ export_dir }}:/usr/src/paperless/export:z
       - {{ consume_dir }}:/usr/src/paperless/consume:z
     networks:
@@ -63,8 +63,8 @@ services:
       PAPERLESS_DBUSER: paperless # only needed if non-default username
       PAPERLESS_DBPASS: '{{ db_password | replace('$', '$$') }}' # only needed if non-default password
       PAPERLESS_DBPORT: 3306
-      USERMAP_UID: 1000
-      USERMAP_GID: 1000
+      # USERMAP_UID: 1000
+      # USERMAP_GID: 1000
       PAPERLESS_URL: "https://{{ domain }}"
     labels:
       - "traefik.enable=true"
