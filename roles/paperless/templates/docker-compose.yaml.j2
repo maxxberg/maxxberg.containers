@@ -68,7 +68,7 @@ services:
       PAPERLESS_URL: "https://{{ domain }}"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.services.paperless-sec.loadbalancer.server.port=80"
+      - "traefik.http.services.paperless-sec.loadbalancer.server.port=8000"
       - "traefik.http.routers.paperless-sec.rule=Host(`{{ domain }}`)"
       - "traefik.docker.network=web_backend"
       - "traefik.http.routers.paperless-sec.tls=true"
