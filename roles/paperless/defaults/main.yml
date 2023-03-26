@@ -1,0 +1,8 @@
+---
+# defaults file for paperless
+domain:
+paperless_db_root_password:
+paperless_db_password:
+export_dir:
+consume_dir:
+certificate_resolver: letsdns

@@ -1,0 +1,75 @@
+version: '3'
+
+volumes:
+  zabbix_db:
+    external: true
+  zabbix_enc:
+    external: true
+  zabbix_ssh_keys:
+    external: true
+  zabbix_ssl_certs:
+    external: true
+  zabbix_ssl_keys:
+    external: true
+  zabbix_ssl_sslca:
+    external: true
+
+networks: 
+  web_backend:
+    external: true
+  internal:
+    external: false
+
+services:
+  db:
+    image: timescale/timescaledb:latest-pg14
+    environment:
+      - POSTGRES_USER={{ postgres_user }}
+      - POSTGRES_PASSWORD={{ postgres_password }}
+    volumes:
+      - zabbix_db:/var/lib/postgresql/data
+    networks:
+      - internal
+    restart: always
+  server:
+    image: zabbix/zabbix-server-pgsql:alpine-6.0-latest
+    environment:
+      - DB_SERVER_HOST=db
+      - POSTGRES_USER={{ postgres_user }}
+      - POSTGRES_PASSWORD={{ postgres_password }}
+      - ZBX_TLSCAFILE=ca.pem
+      - ZBX_TLSCERTFILE=cert.pem
+      - ZBX_TLSKEYFILE=key.pem
+    volumes:
+      - zabbix_enc:/var/lib/zabbix/enc
+      - zabbix_ssh_keys:/var/lib/zabbix/ssh_keys
+      - zabbix_ssl_certs:/var/lib/zabbix/ssl/certs
+      - zabbix_ssl_keys:/var/lib/zabbix/ssl/keys
+      - zabbix_ssl_sslca:/var/lib/zabbix/ssl/ssl_ca
+    networks:
+      - default
+      - internal
+    restart: always
+  frontend:
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-6.0-latest
+    environment:
+      - DB_SERVER_HOST=db
+      - ZBX_SERVER_HOST=server
+      - POSTGRES_USER={{ postgres_user }}
+      - POSTGRES_PASSWORD={{ postgres_password }}
+    networks:
+      - web_backend
+      - internal
+    expose:
+      - 8080
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.zabbix-sec.loadbalancer.server.port=8080"
+      - "traefik.http.routers.zabbix-sec.rule=Host(`{{ domain }}`)"
+      - "traefik.docker.network=web_backend"
+      - "traefik.http.routers.zabbix-sec.tls=true"
+      - "traefik.http.routers.zabbix-sec.tls.certResolver=letsdns"
+      - "traefik.http.routers.zabbix.rule=Host(`{{ domain }}`)"
+      - "traefik.http.routers.zabbix.middlewares=redirect-to-https@file"
+      - "traefik.http.routers.zabbix-sec.middlewares=security_headers@file"
+    restart: always
