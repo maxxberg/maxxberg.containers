@@ -50,8 +50,8 @@ services:
     volumes:
       - {{ project_name }}_data:/usr/src/paperless/data:Z
       - {{ project_name }}_media:/usr/src/paperless/media:Z
-      - "{{ export_dir }}":/usr/src/paperless/export:z
-      - "{{ consume_dir }}":/usr/src/paperless/consume:z
+      - {{ export_dir }}:/usr/src/paperless/export:z
+      - {{ consume_dir }}:/usr/src/paperless/consume:z
     networks:
       - default
       - web_backend
