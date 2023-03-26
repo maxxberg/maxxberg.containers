@@ -69,6 +69,9 @@ services:
       PAPERLESS_TIKA_ENABLED: 1
       PAPERLESS_TIKA_GOTENBERG_ENDPOINT: http://gotenberg:3000
       PAPERLESS_TIKA_ENDPOINT: http://tika:9998
+      PAPERLESS_OCR_LANGUAGE=deu+eng
+      PAPERLESS_TASK_WORKERS=2
+      PAPERLESS_THREADS_PER_WORKER=2
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.paperless-sec.loadbalancer.server.port=8000"
