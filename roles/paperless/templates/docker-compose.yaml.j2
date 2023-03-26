@@ -32,7 +32,7 @@ services:
       MARIADB_DATABASE: paperless
       MARIADB_USER: paperless
       MARIADB_PASSWORD: {{ db_password }}
-      MARIADB_ROOT_PASSWORD: "{{ db_root_password }}"
+      MARIADB_ROOT_PASSWORD: {{ db_root_password }}
 
   webserver:
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
