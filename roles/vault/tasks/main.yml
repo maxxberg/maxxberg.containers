@@ -1,0 +1,36 @@
+---
+# tasks file for vault
+- name: Set project name
+  ansible.builtin.set_fact:
+    project_name: mqtt-broker
+
+- name: Create docker networks - web_backend
+  community.docker.docker_network:
+    name: web_backend
+    internal: true
+    state: present
+
+- name: Create project directory
+  ansible.builtin.file:
+    path: docker-compose/{{ project_name }}
+    state: directory
+    mode: "0755"
+
+- name: Upload configuration
+  ansible.builtin.copy:
+    src: config.hcl
+    dest: docker-compose/{{ project_name }}/config.hcl
+    mode: "0755"
+
+- name: Create docker-compose.yaml
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: docker-compose/{{ project_name }}/docker-compose.yaml
+    force: true
+    mode: "0755"
+
+- name: Docker - {{ project_name }}
+  community.docker.docker_compose:
+    project_src: docker-compose/{{ project_name }}/
+    state: present
+    pull: true

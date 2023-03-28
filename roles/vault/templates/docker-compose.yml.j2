@@ -1,0 +1,10 @@
+version: "3"
+
+services:
+  app:
+    image: docker.io/library/vault:latest
+    cap_add:
+      - "IPC_LOCK"
+    volumes:
+      - ./config.hcl:/vault/config/config.hcl
+      - ./data:/vault_data
