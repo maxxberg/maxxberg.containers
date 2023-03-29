@@ -8,3 +8,13 @@ services:
     volumes:
       - ./config.hcl:/vault/config/config.hcl
       - ./data:/vault_data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.paperless-sec.loadbalancer.server.port=8000"
+      - "traefik.http.routers.paperless-sec.rule=Host(`{{ domain }}`)"
+      - "traefik.docker.network=web_backend"
+      - "traefik.http.routers.paperless-sec.tls=true"
+      - "traefik.http.routers.paperless-sec.tls.certResolver={{ certificate_resolver }}"
+      - "traefik.http.routers.paperless.rule=Host(`{{ domain }}`)"
+      - "traefik.http.routers.paperless.middlewares=redirect-to-https@file"
+      - "traefik.http.routers.paperless-sec.middlewares=security_headers@file"

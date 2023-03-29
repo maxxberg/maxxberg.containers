@@ -1,2 +1,4 @@
 ---
-# defaults file for vault
+# defaults file for vaults
+certificate_resolver: letsdns
+domain:
