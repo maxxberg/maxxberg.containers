@@ -2,7 +2,7 @@
 # tasks file for vault
 - name: Set project name
   ansible.builtin.set_fact:
-    project_name: mqtt-broker
+    project_name: vault
 
 - name: Create docker networks - web_backend
   community.docker.docker_network:

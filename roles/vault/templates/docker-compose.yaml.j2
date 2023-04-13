@@ -6,11 +6,11 @@ services:
     cap_add:
       - "IPC_LOCK"
     volumes:
-      - ./config.hcl:/vault/config/config.hcl
-      - ./data:/vault_data
+      - ./config.hcl:/vault/config/config.hcl:z
+      - ./data:/vault_data:z
     labels:
       - "traefik.enable=true"
-      - "traefik.http.services.paperless-sec.loadbalancer.server.port=8000"
+      - "traefik.http.services.paperless-sec.loadbalancer.server.port=8200"
       - "traefik.http.routers.paperless-sec.rule=Host(`{{ domain }}`)"
       - "traefik.docker.network=web_backend"
       - "traefik.http.routers.paperless-sec.tls=true"
