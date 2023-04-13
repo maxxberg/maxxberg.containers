@@ -10,7 +10,7 @@ networks:
 
 services:
   app:
-    image: ghcr.io/gotify/server
+    image: ghcr.io/gotify/server{% if ansible_facts['ansible_architecture'] == 'aarch64' %}-arm64{% endif +%}
     hostname: gotify
     #ports:
      # - "80"
