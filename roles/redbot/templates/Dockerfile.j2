@@ -10,6 +10,7 @@ USER user
 ENV PATH="/home/user/.local/bin:$PATH"
 RUN python3 -m pip install -U pip setuptools wheel &&\
 	python3 -m pip install -U Red-DiscordBot
+RUN mkdir -p /home/user/redbot && chown -R user:user /home/user/redbot
 RUN redbot-setup --instance-name redbot --data-path /home/user/redbot --backend json
 
 VOLUME ["/home/user/redbot"]
