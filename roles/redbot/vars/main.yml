@@ -1,0 +1,4 @@
+---
+# vars file for redbot
+volumes:
+  data_volume: "{{ project_name }}_data"

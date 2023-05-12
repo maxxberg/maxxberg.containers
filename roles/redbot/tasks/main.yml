@@ -1,0 +1,38 @@
+---
+# tasks file for redbot
+
+- name: Set project name
+  ansible.builtin.set_fact:
+    project_name: redbot
+
+- name: Docker - Create volumes
+  community.docker.docker_volume:
+    name: "{{ item.value }}"
+    state: present
+  loop: "{{ volumes | dict2items }}"
+
+- name: Create project directotory
+  ansible.builtin.file:
+    path: docker-compose/{{ project_name }}
+    state: directory
+    mode: "0755"
+
+- name: Create Dockerfile
+  ansible.builtin.template:
+    src: Dockerfile.j2
+    dest: docker-compose/{{ project_name }}/Dockerfile
+    force: true
+    mode: "0644"
+
+- name: Create docker-compose.yaml
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: docker-compose/{{ project_name }}/docker-compose.yaml
+    force: true
+    mode: "0644"
+
+- name: Docker - {{ project_name }}
+  community.docker.docker_compose:
+    project_src: docker-compose/{{ project_name }}/
+    state: present
+    build: true

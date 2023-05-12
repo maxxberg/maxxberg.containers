@@ -1,0 +1,17 @@
+version: "3.4"
+
+volumes:
+  {{ volumes.data_volume }}:
+    external: true
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: redbot
+    environment:
+      REDBOT_TOKEN: "{{ REDBOT_TOKEN }}"
+      REDBOT_PREFIX: "{{ REDBOT_PREFIX }}"
+    volumes:
+      - {{ volumes.data_volume }}:/home/user/redbot
