@@ -16,3 +16,4 @@ docker_compose:
       type: volume
       name: nxc_mariadb_data
       owner:
+data_volume_network: false
