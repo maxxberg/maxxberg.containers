@@ -27,7 +27,7 @@
   ansible.builtin.set_fact:
     data_volume_network: true
   when:
-    - item.mount is match(docker_compose.volumes.data.name+'*')
+    - item.mount is match(docker_compose.volumes.data.name)
     - item.fstype == "cifs"
   loop: "{{ ansible_mounts }}"
 
