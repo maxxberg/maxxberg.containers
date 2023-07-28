@@ -60,6 +60,7 @@ services:
       - MYSQL_PASSWORD={{ db_password }}
       - MYSQL_ROOT_PASSWORD={{ db_root_password }}
       - REDIS_HOST=redis
+      - PHP_UPLOAD_LIMIT={{ php_upload_limit | default("512M") }}
 {% if reverse_proxy == 'nginx'  %}
       - VIRTUAL_HOST={{ domain }}
       - VIRTUAL_PORT=80
