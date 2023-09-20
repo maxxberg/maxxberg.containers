@@ -37,6 +37,15 @@
     content: |
       all-servers
     mode: "0755"
+  when: container_engine == 'docker'
+
+- name: Create dnsmasq config
+  ansible.builtin.copy:
+    dest: "{{ data_path | default('/var/lib/containers/storage/') + 'volumes/pihole_dnsmasq/_data/02-custom.conf' }}"
+    content: |
+      all-servers
+    mode: "0755"
+  when: container_engine == 'podman'
 
 # - name: Create dnsmasq config
 #   copy:
