@@ -18,16 +18,16 @@ certificatesResolvers:
   letsdnstest:
     acme:
       caServer: https://acme-staging-v02.api.letsencrypt.org/directory
-      email: orik10@web.de
+      email: {{ webmaster_mail }}
       storage: acme.json
       dnsChallenge:
-        provider: hetzner
+        provider: {{ dns_challenge_provider }}
   letsdns:
     acme:
-      email: orik10@web.de
+      email: {{ webmaster_mail }}
       storage: acme.json
       dnsChallenge:
-        provider: hetzner
+        provider: {{ dns_challenge_provider }}
         
 http:
   middlewares:
