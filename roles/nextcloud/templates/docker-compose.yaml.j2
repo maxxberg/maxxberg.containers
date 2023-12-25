@@ -111,3 +111,18 @@ services:
   redis:
     image: docker.io/library/redis:alpine
     restart: always
+
+  collabora:
+    image: docker.io/collabora/code:latest
+    hostname: collabora
+    restart: always
+    expose:
+      - "9980"
+    ulimits:
+     nofile:
+       soft: 65536
+       hard: 65536
+    environment:
+      - username={{ collabora_admin_user }}
+      - password={{ collabora_admin_password }}
+      - server_name=collabora
