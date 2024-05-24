@@ -65,14 +65,14 @@
     state: present
     source: pull
 
-- name: Disable systemd-resolved
-  ansible.builtin.systemd:
-    name: systemd-resolved
-    state: stopped
-    enabled: false
-  when:
-    - state == "present"
-    - is_home_network
+# - name: Disable systemd-resolved
+#   ansible.builtin.systemd:
+#     name: systemd-resolved
+#     state: stopped
+#     enabled: false
+#   when:
+#     - state == "present"
+#     - is_home_network
 
 - name: Enable systemd-resolved
   ansible.builtin.systemd:
