@@ -10,7 +10,7 @@ networks:
 services:
   reverse-proxy:
     # The official v2 Traefik docker image
-    image: traefik:v2.10
+    image: traefik:{{ traefik_image_tag }}
     # Enables the web UI and tells Traefik to listen to docker
     #command: --api.insecure=true --providers.docker --pilot.dashboard=false --providers.docker.exposedByDefault=false
     ports:
