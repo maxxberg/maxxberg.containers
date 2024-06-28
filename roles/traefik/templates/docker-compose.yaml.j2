@@ -23,6 +23,7 @@ services:
       - "443:443"
     environment:
       - "HETZNER_API_KEY={{ hetzner_api_key | default('invalid') }}"
+      - LEGO_DISABLE_CNAME_SUPPORT=true
     volumes:
       # So that Traefik can listen to the Docker events
       #- /var/run/docker.sock:/var/run/docker.sock
