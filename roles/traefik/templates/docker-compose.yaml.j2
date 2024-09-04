@@ -35,9 +35,9 @@ services:
     dns:
       - 9.9.9.9
       - 1.1.1.1
-      - {{ lookup('ansible.general.dig', 'helium.ns.hetzner.de') }}
-      - {{ lookup('ansible.general.dig', 'hydrogen.ns.hetzner.com') }}
-      - {{ lookup('ansible.general.dig', 'oxygen.ns.hetzner.com') }}
+      - {{ lookup('community.general.dig', 'helium.ns.hetzner.de') }}
+      - {{ lookup('community.general.dig', 'hydrogen.ns.hetzner.com') }}
+      - {{ lookup('community.general.dig', 'oxygen.ns.hetzner.com') }}
     restart: always
 
   docker-proxy:
