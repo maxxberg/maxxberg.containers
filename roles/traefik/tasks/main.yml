@@ -1,6 +1,10 @@
 ---
 # tasks file for maxxberg.traefik
 
+- name: Set project directory
+  ansible.builtin.set_fact:
+    project_directory: docker-compose/traefik
+
 - name: Create docker networks - web_backend
   community.docker.docker_network:
     name: "{{ backend_network }}"
@@ -21,19 +25,25 @@
     state: directory
     mode: "0755"
 
+- name: Create acme.json
+  ansible.builtin.file:
+    path: "{{ project_directory }}/acme.json"
+    state: present
+    mode: "0600"
+
 - name: upload config file
-  template:
+  ansible.builtin.template:
     src: traefik.yaml.j2
-    dest: docker-compose/traefik/traefik.yaml
+    dest: "{{ project_directory }}/traefik.yaml"
 
 - name: Create docker-compose.yaml
-  template:
+  ansible.builtin.template:
     src: docker-compose.yaml.j2
-    dest: docker-compose/traefik/docker-compose.yaml
-    force: yes
+    dest: "{{ project_directory }}/docker-compose.yaml"
+    force: true
 
 - name: Docker - Traefik
-  docker_compose:
-    project_src: docker-compose/traefik/
+  community.docker.docker_compose:
+    project_src: "{{ project_directory }}"
     state: present
     pull: true
