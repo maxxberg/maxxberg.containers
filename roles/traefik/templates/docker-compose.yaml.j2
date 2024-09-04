@@ -17,7 +17,7 @@ services:
       # The HTTP port
       - "80:80"
       # The Web UI (enabled by --api.insecure=true)
-{% if api_insecure == 'true' %}
+{% if traefik_api_insecure == 'true' %}
       - "8080:8080"
 {% endif %}
       - "443:443"

@@ -5,8 +5,8 @@ providers:
   file:
     directory: /etc/traefik/
 api:
-  dashboard: {{ api_dashboard }}
-  insecure: {{ api_insecure }}
+  dashboard: {{ traefik_api_dashboard }}
+  insecure: {{ traefik_api_insecure }}
 
 entryPoints:
   http:
@@ -26,8 +26,12 @@ certificatesResolvers:
     acme:
       email: orik10@web.de
       storage: acme.json
+{% if traefik_challenge_type == "dns" %}
       dnsChallenge:
         provider: hetzner
+{% elif traefik_challenge_type == "tls" %}
+      tlsChallenge: {}
+{% endif %}
         
 http:
   middlewares:

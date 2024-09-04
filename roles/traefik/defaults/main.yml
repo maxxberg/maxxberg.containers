@@ -1,4 +1,5 @@
 ---
 # defaults file for maxxberg.traefik
-api_dashboard: false
-api_insecure: false
+traefik_api_dashboard: false
+traefik_api_insecure: false
+traefik_challenge_type: dns
