@@ -72,7 +72,7 @@
 #     enabled: false
 #   when:
 #     - state == "present"
-#     - is_home_network
+#     - pihole_is_home_network
 
 - name: Enable systemd-resolved
   ansible.builtin.systemd:
@@ -81,7 +81,7 @@
     enabled: true
   when:
     - state == "absent"
-    - not is_home_network
+    - not pihole_is_home_network
 
 - name: Docker - pihole
   community.docker.docker_compose:

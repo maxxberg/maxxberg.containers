@@ -1,6 +1,7 @@
 ---
 # defaults file for maxxberg.pihole
-web_password: piholesehrsicher
-ipv4_address: 10.99.50.5
+pihole_web_password: piholesehrsicher
+pihole_ipv4_address: 10.99.50.5
 state: present
-is_home_network: false
+pihole_is_home_network: false
+pihole_ip_bind: 0.0.0.0

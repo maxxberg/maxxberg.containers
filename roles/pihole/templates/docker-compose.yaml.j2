@@ -19,17 +19,17 @@ services:
     image: docker.io/pihole/pihole:latest
     environment:
       TZ: 'Europe/Berlin'
-      WEBPASSWORD: {{ web_password }}
-      ServerIP: {{ ipv4_address }}
+      WEBPASSWORD: {{ pihole_web_password }}
+      ServerIP: {{ pihole_ipv4_address }}
       DNSMASQ_LISTENING: all
       PIHOLE_DNS_: '1.1.1.1;1.0.0.1'
     # Volumes store your data between container upgrades
     volumes:
       - pihole_conf:/etc/pihole/
       - pihole_dnsmasq:/etc/dnsmasq.d/
-{% if is_home_network==true %}
+{% if pihole_is_home_network==true %}
     ports:
-      - "53:53"
+      - "{{ pihole_ip_bind }}:53:53"
 {% endif %}
     dns:
       - 127.0.0.1
@@ -42,7 +42,7 @@ services:
     networks:
       default:
       intranet:
-        ipv4_address: {{ ipv4_address }}
+        pihole_ipv4_address: {{ pihole_ipv4_address }}
 
 #  dnsmasq:
 #    restart: always
@@ -55,6 +55,6 @@ services:
 #    networks:
 #      default:
 #      intranet:
-#        ipv4_address: {{ dnsmasq_ipv4_address }}
+#        pihole_ipv4_address: {{ dnsmasq_ipv4_address }}
 #    cap_add:
 #      - NET_ADMIN
