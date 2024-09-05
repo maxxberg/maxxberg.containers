@@ -74,17 +74,17 @@ services:
       PAPERLESS_THREADS_PER_WORKER: 2
     labels:
       - "traefik.enable=true"
-      - "traefik.http.services.paperless-sec.loadbalancer.server.port=8000"
-      - "traefik.http.routers.paperless-sec.rule=Host(`{{ domain }}`)"
+      - "traefik.http.services.{{ project_name }}-sec.loadbalancer.server.port=8000"
+      - "traefik.http.routers.{{ project_name }}-sec.rule=Host(`{{ domain }}`)"
       - "traefik.docker.network=web_backend"
-      - "traefik.http.routers.paperless-sec.tls=true"
-      - "traefik.http.routers.paperless-sec.tls.certResolver={{ certificate_resolver }}"
-      - "traefik.http.routers.paperless.rule=Host(`{{ domain }}`)"
-      - "traefik.http.routers.paperless.middlewares=redirect-to-https@file"
-      - "traefik.http.routers.paperless-sec.middlewares=security_headers@file"
+      - "traefik.http.routers.{{ project_name }}-sec.tls=true"
+      - "traefik.http.routers.{{ project_name }}-sec.tls.certResolver={{ certificate_resolver }}"
+      - "traefik.http.routers.{{ project_name }}.rule=Host(`{{ domain }}`)"
+      - "traefik.http.routers.{{ project_name }}.middlewares=redirect-to-https@file"
+      - "traefik.http.routers.{{ project_name }}-sec.middlewares=security_headers@file"
 
   gotenberg:
-    image: docker.io/gotenberg/gotenberg:7
+    image: docker.io/gotenberg/gotenberg:8
     restart: unless-stopped
     # The gotenberg chromium route is used to convert .eml files. We do not
     # want to allow external content like tracking pixels or even javascript.
