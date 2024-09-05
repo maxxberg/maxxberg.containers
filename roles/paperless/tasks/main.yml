@@ -4,6 +4,11 @@
 - name: Set project name
   ansible.builtin.set_fact:
     project_name: paperless
+  
+- name: Add project suffix
+  ansible.builtin.set_fact:
+    project_name: "paperless_{{ project_suffix }}"
+  when: project_suffix is defined
 
 - name: Docker - Create volumes
   community.docker.docker_volume:
