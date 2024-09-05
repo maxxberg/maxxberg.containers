@@ -5,4 +5,5 @@ paperless_db_root_password:
 paperless_db_password:
 export_dir:
 consume_dir:
+media_dir:
 certificate_resolver: letsdns

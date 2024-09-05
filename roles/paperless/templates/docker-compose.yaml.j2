@@ -49,7 +49,7 @@ services:
       retries: 5
     volumes:
       - {{ project_name }}_data:/usr/src/paperless/data
-      - {{ project_name }}_media:/usr/src/paperless/media
+      - {{ media_dir }}:/usr/src/paperless/media
       - {{ export_dir }}:/usr/src/paperless/export:z
       - {{ consume_dir }}:/usr/src/paperless/consume:z
     networks:
