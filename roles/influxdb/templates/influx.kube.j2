@@ -1,0 +1,60 @@
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  annotations:
+    io.containers.autoupdate: registry
+  name: {{ project_name }}
+  labels:
+    app: {{ project_name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ project_name }}
+  template:
+    metadata:
+      labels:
+        app: {{ project_name }}
+        traefik.enable: true
+        traefik.http.services.ha_influx-sec.loadbalancer.server.port: 8086
+        traefik.http.routers.ha_influx-sec.rule: Host(`{{ influx_domain | mandatory }}`)
+        traefik.docker.network: web_backend
+        traefik.http.routers.ha_influx-sec.tls: true
+        traefik.http.routers.ha_influx-sec.tls.certResolver: letsdns
+        traefik.http.routers.ha_influx.rule: Host(`{{ influx_domain }}`)
+        traefik.http.routers.ha_influx.middlewares: redirect-to-https@file
+        traefik.http.routers.ha_influx-sec.middlewares: security_headers@file
+      name: {{ project_name }}
+    spec:
+      containers:
+        - name: influxdb
+          image: "docker.io/influxdb:{{ influx_image_tag | mandatory }}"
+          env:
+            - name: DOCKER_INFLUXDB_INIT_MODE
+              value: setup
+            - name: DOCKER_INFLUXDB_INIT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: influx_init_user
+                  name: {{ project_name }}_secrets
+            - name: DOCKER_INFLUXDB_INIT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: influx_init_password
+                  name: {{ project_name }}_secrets
+            - name: DOCKER_INFLUXDB_INIT_ORG
+              value: {{ influx_init_org | default() }}
+            - name: DOCKER_INFLUXDB_INIT_BUCKET
+              value: {{ influx_init_bucket }}
+          volumeMounts:
+            - mountPath: /var/lib/influxdb2
+              name: influx-data
+            - mountPath: /etc/influxdb2
+              name: influx-config
+      volumes:
+        - name: influx-data
+          persistentVolumeClaim:
+            claimName: {{ project_name }}-influx-data
+        - name: influx-config
+          persistentVolumeClaim:
+            claimName: {{ project_name }}-influx-config

@@ -1,0 +1,66 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ project_name }}_traefik_config
+data:
+  traefik.yaml: |
+    providers:
+      docker: 
+        exposedByDefault: false
+        endpoint: "tcp://localhost:2375"
+      file:
+        directory: /etc/traefik/
+    api:
+      dashboard: {{ traefik_api_dashboard }}
+      insecure: {{ traefik_api_insecure }}
+
+    entryPoints:
+      http:
+        address: ":80"
+      https:
+        address: ":443"
+
+    certificatesResolvers:
+      letsdnstest:
+        acme:
+          caServer: https://acme-staging-v02.api.letsencrypt.org/directory
+          email: orik10@web.de
+          storage: /appdata/acme.json
+          dnsChallenge:
+            provider: hetzner
+      letsdns:
+        acme:
+          email: orik10@web.de
+          storage: /appdata/acme.json
+{% if traefik_challenge_type == "dns" %}
+          dnsChallenge:
+            provider: hetzner
+{% elif traefik_challenge_type == "tls" %}
+          tlsChallenge: {}
+{% endif %}
+            
+    http:
+      middlewares:
+        redirect-to-https:
+          redirectScheme:
+            scheme: https
+            permanent: true
+        security_headers:
+          headers:
+            stsSeconds: 15552000 
+{% if middlewares is defined %}
+        {{ middlewares | default() | to_nice_yaml(indent=2) | indent(8) }}
+{% endif %}
+{% if services is defined %}
+      services:
+        {{ services | default() | to_nice_yaml(indent=2) | indent(8) }}
+{% endif %}
+{% if routers is defined %}
+      routers:
+        {{ routers | default() | to_nice_yaml(indent=2) | indent(8) }}
+{% endif %}
+
+    accessLog: {}
+    log:
+      level: warn

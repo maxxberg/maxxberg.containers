@@ -1,0 +1,46 @@
+---
+# tasks file for paperless
+
+- name: Set project name
+  ansible.builtin.set_fact:
+    project_name: paperless
+  
+- name: Add project suffix
+  ansible.builtin.set_fact:
+    project_name: "paperless_{{ project_suffix }}"
+  when: project_suffix is defined
+
+- name: Docker - Create volumes
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ project_name }}_data"
+    - "{{ project_name }}_media"
+    - "{{ project_name }}_dbdata"
+    - "{{ project_name }}_redisdata"
+
+- name: Create docker networks - web_backend
+  community.docker.docker_network:
+    name: web_backend
+    internal: true
+    state: present
+
+- name: Create project directotory
+  ansible.builtin.file:
+    path: docker-compose/{{ project_name }}
+    state: directory
+    mode: "0755"
+
+- name: Create docker-compose.yaml
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: docker-compose/{{ project_name }}/docker-compose.yaml
+    force: true
+    mode: "0755"
+
+- name: Docker - {{ project_name }}
+  community.docker.docker_compose:
+    project_src: docker-compose/{{ project_name }}/
+    state: present
+    pull: true

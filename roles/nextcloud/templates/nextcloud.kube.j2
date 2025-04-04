@@ -1,0 +1,124 @@
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  annotations:
+    io.containers.autoupdate: registry
+  labels:
+    app: {{ project_name }}
+  name: {{ project_name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ project_name }}
+  template:
+    metadata:
+      labels:
+        app: {{ project_name }}
+        traefik.enable: true
+        traefik.http.services.{{ project_name }}-sec.loadbalancer.server.port: 80
+        traefik.http.routers.{{ project_name }}-sec.rule: Host(`{{ nextcloud_domain | mandatory }}`)
+        traefik.docker.network: {{ backend_network }}
+        traefik.http.routers.{{ project_name }}-sec.tls: true
+        traefik.http.routers.{{ project_name }}-sec.tls.certResolver: letsdns
+        traefik.http.routers.{{ project_name }}.rule: Host(`{{ nextcloud_domain }}`)
+        traefik.http.routers.{{ project_name }}.middlewares: redirect-to-https@file
+        traefik.http.routers.{{ project_name }}-sec.middlewares: security_headers@file
+    spec:
+      containers:
+      - name: app
+        image: docker.io/library/nextcloud:{{ nextcloud_image_tag }}-fpm-alpine
+        volumeMounts:
+        - mountPath: /var/www/html/data
+          name: nextcloud-data
+        - mountPath: /var/www/html/config
+          name: nextcloud-config
+        - mountPath: /var/www/html/custom_apps
+          name: nextcloud-custom_apps
+        - mountPath: /var/www/html/
+          name: nextcloud-html
+        - mountPath: /var/www/html/config/defaultparameters.config.php
+          name: nextcloud-configmap
+          subPath: defaultparameters.config.php
+        - mountPath: /var/www/html/config/db.config.php
+          name: nextcloud-configmap
+          subPath: db.config.php
+        - mountPath: /var/www/html/config/mail.config.php
+          name: nextcloud-configmap
+          subPath: mail.config.php
+      - name: web
+        image: docker.io/library/nginx:alpine
+        volumeMounts:
+        - mountPath: /var/www/html/data
+          name: nextcloud-data
+        - mountPath: /var/www/html/config
+          name: nextcloud-config
+        - mountPath: /var/www/html/custom_apps
+          name: nextcloud-custom_apps
+        - mountPath: /var/www/html/
+          name: nextcloud-html
+        - mountPath: /var/www/html/config/defaultparameters.config.php
+          name: nextcloud-configmap
+          subPath: defaultparameters.config.php
+        - mountPath: /var/www/html/config/db.config.php
+          name: nextcloud-configmap
+          subPath: db.config.php
+        - mountPath: /var/www/html/config/mail.config.php
+          name: nextcloud-configmap
+          subPath: mail.config.php
+        - mountPath: /etc/nginx/nginx.conf
+          name: nextcloud-configmap
+          subPath: nginx.conf
+      - name: cron
+        image: docker.io/library/nextcloud:{{ nextcloud_image_tag }}-fpm-alpine
+        command: ["/cron.sh"]
+        volumeMounts:
+        - mountPath: /var/www/html/data
+          name: nextcloud-data
+        - mountPath: /var/www/html/config
+          name: nextcloud-config
+        - mountPath: /var/www/html/custom_apps
+          name: nextcloud-custom_apps
+        - mountPath: /var/www/html/
+          name: nextcloud-html
+        - mountPath: /var/www/html/config/defaultparameters.config.php
+          name: nextcloud-configmap
+          subPath: defaultparameters.config.php
+        - mountPath: /var/www/html/config/db.config.php
+          name: nextcloud-configmap
+          subPath: db.config.php
+        - mountPath: /var/www/html/config/mail.config.php
+          name: nextcloud-configmap
+          subPath: mail.config.php
+      - name: redis
+        image: "docker.io/library/redis:{{ nextcloud_redis_image_tag | default('7') }}"
+        args:
+          - "--bind 127.0.0.1"
+        volumeMounts:
+          - name: redisdata
+            mountPath: /data
+      volumes:
+{% if nextcloud is defined and nextcloud.data_path %}
+      - HostPath:
+          path: {{ nextcloud.data_path }}
+          type: Directory
+{% else %}
+      - persistentVolumeClaim:
+          claimName: {{ project_name }}-data
+{%- endif %}
+        name: nextcloud-data
+      - persistentVolumeClaim:
+          claimName: {{ project_name }}-config
+        name: nextcloud-config
+      - persistentVolumeClaim:
+          claimName: {{ project_name }}-custom_apps
+        name: nextcloud-custom_apps
+      - persistentVolumeClaim:
+          claimName: {{ project_name }}-html
+        name: nextcloud-html
+      - name: redisdata
+        persistentVolumeClaim:
+          claimName: {{ project_name }}-redisdata
+      - name: nextcloud-configmap
+        configMap:
+          name: {{ project_name }}_nextcloud_config

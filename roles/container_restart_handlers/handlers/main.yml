@@ -1,0 +1,11 @@
+#SPDX-License-Identifier: MIT-0
+---
+# handlers file for container_restart_handlers
+- name: Systemd daemon reload
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: Restart service - {{ container_restart_handlers_service }}
+  ansible.builtin.systemd_service:
+    name: "{{ container_restart_handlers_service }}"
+    state: restarted

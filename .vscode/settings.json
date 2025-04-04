@@ -1,0 +1,17 @@
+{
+    "ansible.python.interpreterPath": "/usr/local/bin/python",
+    "yaml.schemas": {
+        "kubernetes": "*.yaml",
+        "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.32.1-standalone-strict/all.json": [
+            "file:///workspaces/maxxberg.docker/roles/pihole/templates/pihole-container.kube",
+            "file:///workspaces/maxxberg.docker/roles/pihole/templates/pihole-container.kube.j2",
+            "file:///workspaces/maxxberg.docker/roles/traefik/templates/traefik.kube",
+            "file:///workspaces/maxxberg.docker/roles/traefik/templates/traefik.kube.j2",
+            "file:///workspaces/maxxberg.docker/roles/homeassistant/templates/db.kube.yml",
+            "file:///workspaces/maxxberg.docker/roles/mqtt_broker/templates/mqtt.kube.yml",
+            "file:///workspaces/maxxberg.docker/roles/homeassistant/templates/homeassistant.kube.yml",
+            "file:///workspaces/maxxberg.docker/roles/grafana/templates/influx.kube.j2",
+            "file:///workspaces/maxxberg.docker/roles/mariadb/templates/mariadb.kube.j2"
+        ]
+    }
+}

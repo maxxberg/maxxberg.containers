@@ -1,0 +1,75 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for grafana
+- name: Set project base name
+  ansible.builtin.set_fact:
+    project_base_name: grafana
+
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_name: "{{ project_base_name }}{{ project_suffix | default('') }}"
+
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_dir: "{{ ansible_user_dir }}/podman/{{ project_name }}"
+
+- name: Create directory
+  ansible.builtin.file:
+    path: "{{ project_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Mutliblock
+  block:
+    - name: Podman - Networks
+      containers.podman.podman_network:
+        name: "{{ item.name }}"
+        internal: "{{ item.internal }}"
+        state: present
+      with_items:
+        - name: "{{ project_name }}_default"
+          internal: false
+        - name: "{{ backend_network }}"
+          internal: true
+
+    - name: Podman - Secrets
+      containers.podman.podman_secret:
+        name: "{{ project_name }}_secrets"
+        data: |
+          apiVersion: v1
+          data:
+            grafana_password: {{ grafana_password | b64encode }}
+          kind: Secret
+          metadata:
+            name: {{ project_name }}_secrets
+
+    - name: Create volumes
+      containers.podman.podman_volume:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - "{{ project_name }}-grafana-data"
+        - "{{ project_name }}-grafana-config"
+
+    - name: Template kube file
+      ansible.builtin.template:
+        src: ../shared/templates/concat.j2
+        dest: "{{ project_dir }}/{{ project_name }}.kube"
+        mode: "0644"
+      vars:
+        input_files:
+          - grafana.kube.j2
+
+    - name: Create Quadlet
+      containers.podman.podman_play:
+        kube_file: "{{ project_dir }}/{{ project_name }}.kube"
+        quadlet_filename: "{{ project_name }}"
+        network:
+          - "{{ project_name }}_default"
+          - "{{ backend_network }}"
+        quadlet_options: |
+            [Install]
+            WantedBy=default.target
+        state: quadlet
+
+# END OF BLOCK

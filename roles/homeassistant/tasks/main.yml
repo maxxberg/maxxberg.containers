@@ -1,80 +1,78 @@
 ---
-# tasks file for maxxberg.homeassistant
-- name: Set project name
-  set_fact:
-    project_name: homeassistant
-- name: Docker - Create volumes
-  docker_volume:
-    name: "{{ item }}"
-    state: present
-  loop:
-    - homea_config
+# tasks for role homeassistant
+- name: Set project base name
+  ansible.builtin.set_fact:
+    project_base_name: homeassistant
 
-- name: Create docker networks - web_backend
-  docker_network:
-    name: web_backend
-    internal: yes
-    state: present
-- name: Create docker networks - ha_net
-  docker_network:
-    name: ha_net
-    internal: yes
-    state: present
-    ipam_config:
-    - subnet: "{{ ha_net_network }}"
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_name: "{{ project_base_name }}{{ project_suffix | default('') }}"
 
-- name: Create project directotory
-  file:
-    path: docker-compose/{{project_name}}
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_dir: "{{ ansible_user_dir }}/podman/{{ project_name }}"
+
+- name: Create directory
+  ansible.builtin.file:
+    path: "{{ project_dir }}"
     state: directory
-- name: Create config directory
-  file: 
-    path: docker-compose/{{project_name}}/config
-    state: directory
-- name: Create data directory
-  file:
-    path: docker-compose/{{project_name}}/data
-    state: directory
-#- name: Upload init files
-#  copy:
-#    src: init/
-#    dest: docker-compose/{{project_name}}/init
+    mode: "0755"
 
-- name: Test if old configuration exists
-  ansible.builtin.stat:
-    path: docker-compose/{{project_name}}/config/configuration.yaml
-  register: config_exists
+- name: Mutliblock
+  # notify: Restart {{ ansible_role_name }}
+  block:
+    - name: Podman - Networks
+      containers.podman.podman_network:
+        name: "{{ item.name }}"
+        internal: "{{ item.internal }}"
+        state: present
+      with_items:
+        - name: "{{ project_name }}_default"
+          internal: false
+        - name: "{{ backend_network }}"
+          internal: true
 
-- name: Read old configuration
-  ansible.builtin.slurp:
-    src: docker-compose/{{project_name}}/config/configuration.yaml
-  register: config
-  when: config_exists.stat.exists
+    - name: Podman - Secrets
+      containers.podman.podman_secret:
+        name: "{{ project_name }}_secrets"
+        data: |
+          apiVersion: v1
+          data:
+            db_user: {{ db_user | b64encode }}
+            db_password: {{ db_password | b64encode }}
+            db_root_password: {{ db_root_password | b64encode }}
+          kind: Secret
+          metadata:
+            name: {{ project_name }}_secrets
 
-- name: debug
-  debug:
-    msg: "{{ (config.content | b64decode | replace(': !', ': ') | from_yaml) }}"
+    - name: Create volumes
+      containers.podman.podman_volume:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - "{{ project_name }}-ha-config"
+        - "{{ project_name }}-db-data"
 
-- name: Parse token and org
-  set_fact:
-    influx_token: "{{ (config.content | b64decode | replace(': !', ': ') | from_yaml).influxdb.token }}"
-    influx_org: "{{ (config.content | b64decode | replace(': !', ': ') | from_yaml).influxdb.organization  }}"
+    - name: Template kube file
+      ansible.builtin.template:
+        src: ../shared/templates/concat.j2
+        dest: "{{ project_dir }}/{{ project_name }}.kube"
+        mode: "0644"
+      vars:
+        input_files:
+          - homeassistant.kube.yml
+          - db.kube.yml
 
-- name: Render Home Assistant configuration
-  template:
-    src: configuration.yaml
-    dest: docker-compose/{{project_name}}/config/
-    force: yes
-  when: not config_exists.stat.exists
+    - name: Create Quadlet
+      containers.podman.podman_play:
+        kube_file: "{{ project_dir }}/{{ project_name }}.kube"
+        quadlet_filename: "{{ project_name }}"
+        network:
+          - "{{ project_name }}_default"
+          - "{{ backend_network }}"
+        quadlet_options: |
+            [Install]
+            WantedBy=default.target
+        state: quadlet
 
-- name: Create docker-compose.yaml
-  template:
-    src: docker-compose.yaml.j2
-    dest: docker-compose/{{project_name}}/docker-compose.yaml
-    force: yes
-
-- name: Docker - {{project_name}}
-  docker_compose:
-    project_src: docker-compose/{{project_name}}/
-    state: present
-    pull: yes
+# END OF BLOCK

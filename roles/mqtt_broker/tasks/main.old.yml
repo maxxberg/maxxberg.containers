@@ -1,0 +1,58 @@
+---
+# tasks file for maxxberg.mqtt-broker
+- name: Set project name
+  set_fact:
+    project_name: mqtt-broker
+# - name: Docker - Create volumes
+#   docker_volume:
+#     name: "{{ item }}"
+#     state: present
+#   loop:
+#     - homea_config
+
+- name: Create docker networks - web_backend
+  docker_network:
+    name: web_backend
+    internal: yes
+    state: present
+- name: Create docker networks - ha_net
+  docker_network:
+    name: ha_net
+    internal: yes
+    state: present
+    ipam_config:
+    - subnet: "{{ ha_net_network }}"
+
+- name: Create project directory
+  file:
+    path: docker-compose/{{project_name}}
+    state: directory
+- name: Create config directory
+  file: 
+    path: docker-compose/{{project_name}}/config
+    state: directory
+- name: Create data directory
+  file:
+    path: docker-compose/{{project_name}}/data
+    state: directory
+- name: Create log directory
+  file:
+    path: docker-compose/{{project_name}}/log
+    state: directory
+#- name: Upload init files
+#  copy:
+#    src: init/
+#    dest: docker-compose/{{project_name}}/init
+
+
+- name: Create docker-compose.yaml
+  template:
+    src: docker-compose.yaml.j2
+    dest: docker-compose/{{project_name}}/docker-compose.yaml
+    force: yes
+
+- name: Docker - {{project_name}}
+  docker_compose:
+    project_src: docker-compose/{{project_name}}/
+    state: present
+    pull: yes

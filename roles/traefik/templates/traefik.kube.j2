@@ -1,0 +1,67 @@
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  annotations:
+    io.podman.annotations.ulimit: nproc=4194304:4194304
+    io.containers.autoupdate: registry
+  labels:
+    app: {{ project_name }}
+  name: {{ project_name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ project_name }}
+  template:
+    spec:
+      containers:
+      - env:
+        - name: CONTAINERS
+          value: "1"
+        image: docker.io/tecnativa/docker-socket-proxy:latest
+        name: docker_proxy
+        securityContext:
+          privileged: true
+          procMount: Unmasked
+        volumeMounts:
+        - mountPath: /var/run/docker.sock
+          name: docker.sock
+      - env:
+        - name: HETZNER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              key: hetzner_api_key
+              name: {{ project_name }}_secrets
+        - name: LEGO_DISABLE_CNAME_SUPPORT
+          value: "true"
+        image: docker.io/library/traefik:{{ traefik_image_tag }}
+        name: reverse_proxy
+        ports:
+        - containerPort: 80
+          hostPort: 80
+        - containerPort: 443
+          hostPort: 443
+        volumeMounts:
+        - mountPath: /appdata
+          name: traefik-acme.json
+        - mountPath: /etc/traefik/
+          name: traefik-traefik.yaml
+      dnsConfig:
+        nameservers:
+        - 9.9.9.9
+        - 1.1.1.1
+        - {{ lookup('community.general.dig', 'helium.ns.hetzner.de') }}
+        - {{ lookup('community.general.dig', 'hydrogen.ns.hetzner.com') }}
+        - {{ lookup('community.general.dig', 'oxygen.ns.hetzner.com') }}
+      restartPolicy: Always
+      volumes:
+      - hostPath:
+          path: /var/run/podman/podman.sock
+          type: File
+        name: docker.sock
+      - configMap:
+          name: {{ project_name }}_traefik_config
+        name: traefik-traefik.yaml
+      - persistentVolumeClaim:
+          claimName: {{ project_name }}-appdata
+        name: traefik-acme.json

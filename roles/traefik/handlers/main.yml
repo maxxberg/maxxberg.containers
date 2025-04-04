@@ -1,2 +1,7 @@
 ---
 # handlers file for maxxberg.traefik
+- name: Restart {{ ansible_role_name }}
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+    name: "{{ project_base_name }}*"
+    state: restarted

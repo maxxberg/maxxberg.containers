@@ -1,35 +1,32 @@
 ---
 # tasks file for maxxberg.pihole
 
-- name: Docker - Create volumes
-  docker_volume:
-    name: "{{ item }}"
-    state: present
-  loop:
-    - pihole_conf
-    - pihole_dnsmasq
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_name: pihole
 
-- name: Create project directotory
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_dir: "{{ ansible_user_dir }}/podman/{{ project_name }}"
+
+- name: Create directory
   ansible.builtin.file:
-    path: docker-compose/pihole
+    path: "{{ project_dir }}"
     state: directory
     mode: "0755"
 
-- name: Create docker-compose.yaml
-  ansible.builtin.template:
-    src: docker-compose.yaml.j2
-    dest: docker-compose/pihole/docker-compose.yaml
-    force: true
-    mode: "0755"
+# - name: Create project directotory
+#   ansible.builtin.file:
+#     path: docker-compose/pihole
+#     state: directory
+#     mode: "0755"
 
-- name: Create docker networks - intranet
-  community.docker.docker_network:
-    name: intranet
-    internal: true
-    state: present
-    ipam_config:
-      - subnet: "{{ intranet_network | mandatory }}"
-
+# - name: Create docker-compose.yaml
+#   ansible.builtin.template:
+#     src: docker-compose.yaml.j2
+#     dest: docker-compose/pihole/docker-compose.yaml
+#     force: true
+#     mode: "0755"
 
 - name: Create dnsmasq config
   ansible.builtin.copy:
@@ -58,13 +55,6 @@
 #       server=9.9.9.9
 #       server=1.1.1.1
 
-
-- name: Docker - pull image
-  community.docker.docker_image:
-    name: docker.io/pihole/pihole:latest
-    state: present
-    source: pull
-
 # - name: Disable systemd-resolved
 #   ansible.builtin.systemd:
 #     name: systemd-resolved
@@ -83,7 +73,107 @@
     - state == "absent"
     - not pihole_is_home_network
 
-- name: Docker - pihole
-  community.docker.docker_compose:
-    project_src: docker-compose/pihole/
+# - name: Docker - pihole
+#   community.docker.docker_compose:
+#     project_src: docker-compose/pihole/
+#     state: present
+
+- name: Podman - Create volumes
+  containers.podman.podman_volume:
+    name: "{{ item }}"
     state: present
+  loop:
+    - pihole_conf
+    - pihole_dnsmasq
+
+- name: Podman - Networks
+  containers.podman.podman_network:
+    name: "{{ item.name }}"
+    internal: "{{ item.internal }}"
+    state: present
+    subnet: "{{ item.subnet | default(omit) }}"
+  with_items:
+    - name: "{{ project_name }}_default"
+      internal: false
+    - name: intranet
+      internal: true
+      subnet: "{{ intranet_network | mandatory }}"
+
+- name: Podman - Secrets
+  containers.podman.podman_secret:
+    name: "{{ project_name }}_secrets"
+    data: |
+      apiVersion: v1
+      data:
+        web_password: {{ pihole_web_password | b64encode }}
+      kind: Secret
+      metadata:
+        creationTimestamp: null
+        name: pihole_secrets
+
+- name: Template kube file
+  ansible.builtin.template:
+    src: ../shared/templates/concat.j2
+    dest: "{{ project_dir }}/{{ project_name }}.kube"
+    mode: "0644"
+  vars:
+    input_files:
+      - pihole-container.kube.j2
+
+- name: Create Quadlet
+  containers.podman.podman_play:
+    kube_file: "{{ project_dir }}/{{ project_name }}.kube"
+    quadlet_filename: "{{ project_name }}"
+    network:
+      - "intranet.network{{ ':ip=' + pihole_ipv4_address | default('') }}"
+      - "{{ project_name }}_default.network"
+    quadlet_options: |
+        [Install]
+        WantedBy=default.target
+    state: quadlet
+  # notify: systemd-daemon-reload
+
+
+# - name: Podman - Container
+#   containers.podman.podman_container:
+#     name: "{{ project_name }}-pihole"
+#     image: docker.io/pihole/pihole:latest
+#     env:
+#       TZ: 'Europe/Berlin'
+#       ServerIP: "{{ pihole_ipv4_address }}"
+#       DNSMASQ_LISTENING: all
+#       PIHOLE_DNS_: '1.1.1.1;1.0.0.1'
+#     secrets:
+#       - "{{ project_name }}_web_password,type=env,target=WEBPASSWORD"
+#     # Volumes store your data between container upgrades
+#     volumes:
+#       - "pihole_conf:/etc/pihole/"
+#       - "pihole_dnsmasq:/etc/dnsmasq.d/"
+#     ports:
+#       - "{{ (pihole_is_home_network | bool) | ternary(pihole_ip_bind + ':53:53/udp', false, omit) }}"
+#     dns:
+#       - 127.0.0.1
+#       - 1.1.1.1
+#     restart_policy: on-failure
+#     network:
+#       - intranet.network
+#       - "{{ project_name }}_default.network"
+#     state: quadlet
+#     quadlet_options:
+#       - "AutoUpdate=registry"
+#       - "Pull=newer"
+#       - |
+#         [Install]
+#         WantedBy=default.target
+#   notify: Restart Pihole container
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+
+# - name: Docker[command] - pihole
+#   ansible.builtin.command:
+#     cmd: podman compose up -d
+#     chdir: "{{ project_dir }}"
+#   changed_when: true

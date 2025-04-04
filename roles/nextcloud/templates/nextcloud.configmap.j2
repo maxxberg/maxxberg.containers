@@ -1,0 +1,95 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ project_name }}_nextcloud_config
+data:
+  defaultparameters.config.php: |
+    <?php
+    $CONFIG = array (
+    'instanceid' => '{{ nextcloud_config.instanceid }}',
+    'passwordsalt' => '{{ nextcloud_config.passwordsalt }}',
+    'secret' => '{{ nextcloud_config.secret }}',
+    'trusted_domains' => 
+      [
+{%- for domain in nextcloud_config.trusted_domains %}
+        '{{ domain -}}',
+{% endfor %}
+      ],
+    'trusted_proxies' => 
+      [
+{%- for proxy in nextcloud_config.trusted_proxies %}
+        '{{ proxy -}}',
+{% endfor %}
+      ],
+    'apps_paths' => 
+    array (
+        0 => 
+        array (
+        'path' => '/var/www/html/apps',
+        'url' => '/apps',
+        'writable' => false,
+        ),
+        1 => 
+        array (
+        'path' => '/var/www/html/custom_apps',
+        'url' => '/custom_apps',
+        'writable' => true,
+        ),
+    ),
+    'overwritehost' => '{{ nextcloud_config.overwritehost | default('') }}',
+    'overwriteprotocol' => '{{ nextcloud_config.overwriteprotocol | default('https') }}',
+    'datadirectory' => '/var/www/html/data',
+    'overwrite.cli.url' => '{{ nextcloud_config.overwrite.cli.url | default('') }}',
+    'theme' => '',
+    'loglevel' => 0,
+    'memcache.local' => '{{ nextcloud_config.memcache.local | default('\\OC\\Memcache\\APCu') }}',
+    'memcache.distributed' => '{{ nextcloud_config.memcache.distributed | default('\\OC\\Memcache\\Redis') }}',
+    'memcache.locking' => '{{ nextcloud_config.memcache.locking | default('\\OC\\Memcache\\Redis') }}',
+    'redis' => 
+    array (
+        'host' => '{{ nextcloud_config.redis.host | default('redis') }}',
+        'password' => '{{ nextcloud_config.redis.password | default('') }}',
+        'port' => {{ nextcloud_config.redis.port | default(6379) }},
+    ),
+    'updater.release.channel' => 'stable',
+    'htaccess.RewriteBase' => '/',
+    'mysql.utf8mb4' => true,
+    'has_rebuilt_cache' => true,
+    'defaultapp' => 'files',
+    'trashbin_retention_obligation' => 'auto, 10',
+    'default_phone_region' => 'DE',
+    'maintenance_window_start' => 1,
+    );
+
+  db.config.php: |
+    <?php
+    $CONFIG = array (
+    'dbtype' => '{{ nextcloud_config.dbtype | default('mysql') }}',
+    'dbname' => '{{ nextcloud_config.dbname | default('nextcloud') }}',
+    'dbhost' => '{{ nextcloud_config.dbhost | default(db_hostname) }}',
+    'dbport' => '{{ nextcloud_config.dbport | default('') }}',
+    'dbtableprefix' => 'oc_',
+    'dbuser' => '{{ nextcloud_config.dbuser | mandatory }}',
+    'dbpassword' => '{{ nextcloud_config.dbpassword | mandatory }}',
+    );
+
+  mail.config.php: |
+    <?php
+    $CONFIG = array (
+    'mail_smtpmode' => '{{ nextcloud_config.mail.smtpmode | default('smtp') }}',
+    'mail_smtpauthtype' => '{{ nextcloud_config.mail.smtpauthtype | default('LOGIN') }}',
+    'mail_smtpsecure' => '{{ nextcloud_config.mail.smtpsecure | default('ssl') }}',
+    'mail_smtpauth' => {{ nextcloud_config.mail.smtpauth | default(true) }},
+    'mail_from_address' => '{{ nextcloud_config.mail.from_address | default('nextcloud') }}',
+    'mail_domain' => '{{ nextcloud_config.mail.domain | mandatory }}',
+    'mail_smtphost' => '{{ nextcloud_config.mail.smtphost | mandatory }}',
+    'mail_smtpport' => '{{ nextcloud_config.mail.smtpport | default(465) }}',
+    'mail_smtpname' => '{{ nextcloud_config.mail.smtpname | mandatory }}',
+    'mail_smtppassword' => '{{ nextcloud_config.mail.smtppassword | mandatory }}',
+    'mail_sendmailmode' => '{{ nextcloud_config.mail.sendmailmode | default('smtp') }}',
+    );
+
+  nginx.conf: |
+    {% macro someop() %}{% include 'nginx.conf' %}{% endmacro %}
+{{ someop() | indent }}

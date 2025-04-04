@@ -1,0 +1,60 @@
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  annotations:
+    io.containers.autoupdate: registry
+  labels:
+    app: {{ project_name }}
+  name: {{ project_name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ project_name }}
+  template:
+    metadata:
+      labels:
+        app: {{ project_name }}
+      name: {{ project_name }}
+    spec:
+      containers:
+      - env:
+        - name: TZ
+          value: Europe/Berlin
+        - name: DNSMASQ_LISTENING
+          value: all
+        - name: ServerIP
+          value: {{ pihole_ipv4_address }}
+        - name: PIHOLE_DNS_
+          value: 1.1.1.1;1.0.0.1
+        - name: WEBPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ project_name }}_secrets
+              key: web_password
+        image: docker.io/pihole/pihole:latest
+        imagePullPolicy: always
+        name: pihole
+{% if pihole_is_home_network==true %}
+        ports:
+        - containerPort: 53
+          hostIP: {{ pihole_ip_bind }}
+          hostPort: 53
+          protocol: UDP
+{% endif %}
+        volumeMounts:
+        - mountPath: /etc/dnsmasq.d/
+          name: pihole_dnsmasq-pvc
+        - mountPath: /etc/pihole/
+          name: pihole_conf-pvc
+        dnsConfig:
+          nameservers:
+          - 127.0.0.1
+          - 1.1.1.1
+      volumes:
+      - name: pihole_dnsmasq-pvc
+        persistentVolumeClaim:
+          claimName: pihole_dnsmasq
+      - name: pihole_conf-pvc
+        persistentVolumeClaim:
+          claimName: pihole_conf
