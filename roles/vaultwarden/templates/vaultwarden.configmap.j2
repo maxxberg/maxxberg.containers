@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vaultwarden_env_map
+data:
+    WEBSOCKET_ENABLED: "true"
+    SIGNUPS_ALLOWED: "false"
+    DOMAIN: "https://{{ domain }}"
+    LOG_FILE: "/data/vaultwarden.log"
+    LOG_LEVEL: "warn"
+{% if smtp_enabled | default("false") == "true" %}
+    SMTP_HOST: {{ smtp_host | default() }}
+    SMTP_FROM: {{ smtp_from | default() }}
+    SMTP_FROM_NAME: {{ smtp_from_name | default() }}
+    SMTP_SECURITY: {{ smtp_security | default("force_tls") }}
+    SMTP_PORT: {{ smtp_port | default("465") }}
+    SMTP_USERNAME: {{ smtp_username | default() }}
+    SMTP_TIMEOUT: {{ smtp_timeout | default("15") }}
+{% endif %}
