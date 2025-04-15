@@ -1,0 +1,96 @@
+---
+# tasks file for podman_service_deploy
+#SPDX-License-Identifier: MIT-0
+- name: Create directory
+  ansible.builtin.file:
+    path: "{{ project_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Multiblock
+  block:
+    - name: Podman - Networks
+      containers.podman.podman_network:
+        name: "{{ item.name }}"
+        internal: "{{ item.internal }}"
+        state: present
+      with_items: "{{ podman.networks }}"
+
+    - name: Podman - Secrets
+      containers.podman.podman_secret:
+        name: "{{ project_name }}_secrets"
+        data: |
+          apiVersion: v1
+          data:
+          {% for secret in podman.secrets %}
+            {{ secret.name }}: {{ secret.value | b64encode }}
+          {% endfor %}
+          kind: Secret
+          metadata:
+            name: {{ project_name }}_secrets
+      when: podman.secrets is defined and podman.secrets|length > 0
+
+    - name: Create volumes
+      containers.podman.podman_volume:
+        name: "{{ item }}"
+        state: present
+      with_items: "{{ podman.volumes }}"
+      when: podman.volumes is defined
+
+    - name: Assemble input_files
+      ansible.builtin.set_fact:
+        input_files: "{{ podman.kube_files }}"
+
+    - name: Template kube file
+      ansible.builtin.template:
+        src: ../shared/templates/concat_variable.j2
+        dest: "{{ project_dir }}/{{ project_name }}.kube"
+        mode: "0644"
+
+    - name: Prepare network list
+      ansible.builtin.set_fact:
+        podman_service_networks: "{{ (podman_service_networks | default([])) + [item.name] }}"
+      with_items: "{{ podman.networks }}"
+
+    - name: Prepare service dependencies
+      ansible.builtin.set_fact:
+        podman_service_requires: []
+
+    - name: Add mariadb to service dependencies
+      ansible.builtin.set_fact:
+        podman_service_requires: "{{ podman_service_requires + [db_name] }}"
+      when: db_name is defined
+
+    - name: Create Quadlet
+      containers.podman.podman_play:
+        kube_file: "{{ project_dir }}/{{ project_name }}.kube"
+        quadlet_filename: "{{ project_name }}"
+        network: "{{ podman_service_networks }}"
+        quadlet_options: |
+            [Install]
+            WantedBy=default.target
+            [Unit]
+            {% for service in podman_service_requires %}
+            Requires={{ service }}.service
+            {% endfor %}
+        state: quadlet
+
+# END OF BLOCK
+
+# - name: Set mariadb_network (Needed because of lazy evaluation)
+#   ansible.builtin.set_fact:
+#     db_networks:
+#       - "{{ project_name }}_db"
+#   when: podman.mariadb is defined
+
+- name: Include Mariadb
+  ansible.builtin.include_role:
+    name: .mariadb
+  vars:
+    mariadb_name: "{{ podman.mariadb.name }}"
+    mariadb_networks: "{{ podman.mariadb.networks }}"
+    mariadb_user: "{{ podman.mariadb.user }}"
+    mariadb_password: "{{ podman.mariadb.password }}"
+    mariadb_root_password: "{{ podman.mariadb.root_password }}"
+    mariadb_image_tag: "{{ podman.mariadb.image_tag | mandatory }}"
+  when: podman.mariadb is defined
