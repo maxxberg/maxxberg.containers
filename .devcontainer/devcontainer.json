@@ -4,6 +4,12 @@
 	"name": "Python 3",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/python:3.12",
+	// "mounts": [
+	// 	"source=${localEnv:SSH_AUTH_SOCK},target=/root/.ssh/ssh-agent.sock,type=bind,consistency=cached"
+	// ],
+	// "remoteEnv": {
+	// 	"SSH_AUTH_SOCK": "${containerEnv:HOME}/.ssh/ssh-agent.sock"
+	// },
 	// "features": {
 	// 	"ghcr.io/devcontainers-contrib/features/ansible:2": {
 	// 		"version": "latest"
