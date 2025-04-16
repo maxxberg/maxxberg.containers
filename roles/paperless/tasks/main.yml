@@ -25,7 +25,7 @@
   ansible.builtin.include_role:
     name: podman_service_deploy
   vars:
-    podman:
+    podman_service_deploy_config:
       networks:
         - name: "{{ project_name }}_default"
           internal: false
