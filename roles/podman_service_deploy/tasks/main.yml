@@ -1,6 +1,11 @@
 ---
 # tasks file for podman_service_deploy
 # SPDX-License-Identifier: MIT-0
+- name: Reset variables
+  ansible.builtin.set_fact:
+    podman_service_requires: []
+    podman_service_networks: []
+
 - name: Create directory
   ansible.builtin.file:
     path: "{{ project_dir }}"

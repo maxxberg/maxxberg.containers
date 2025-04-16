@@ -10,58 +10,23 @@
   ansible.builtin.set_fact:
     project_dir: "{{ ansible_user_dir }}/podman/{{ project_name }}"
 
-- name: Create directory
-  ansible.builtin.file:
-    path: "{{ project_dir }}"
-    state: directory
-    mode: "0755"
-
-- name: Multiblock
-  # notify: Restart {{ ansible_role_name }}
-  block:
-    - name: Podman - Secrets
-      containers.podman.podman_secret:
-        name: "{{ project_name }}_secrets"
-        data: |
-          apiVersion: v1
-          data:
-            db_user: {{ mariadb_user | b64encode }}
-            db_password: {{ mariadb_password | b64encode }}
-            db_root_password: {{ mariadb_root_password | b64encode }}
-          kind: Secret
-          metadata:
-            name: {{ project_name }}_secrets
-
-    - name: Create volumes
-      containers.podman.podman_volume:
-        name: "{{ item }}"
-        state: present
-      with_items:
+- name: Workaround for lazy evaluation
+  ansible.builtin.set_fact:
+    podman_service_deploy_config:
+      networks: "{{ mariadb_networks }}"
+      secrets:
+        - name: db_user
+          value: "{{ mariadb_user }}"
+        - name: db_password
+          value: "{{ mariadb_password }}"
+        - name: db_root_password
+          value: "{{ mariadb_root_password }}"
+      volumes:
         - "{{ project_name }}-db-data"
         - "{{ project_name }}-db-config"
+      kube_files:
+        - "{{ lookup('ansible.builtin.template', 'mariadb.kube.j2') }}"
 
-    # - name: Set input files
-    #   ansible.builtin.set_fact:
-    #     input_files:
-    #       - mariadb.kube.j2
-
-    - name: Template kube file
-      ansible.builtin.template:
-        src: ../shared/templates/concat.j2
-        dest: "{{ project_dir }}/{{ project_name }}.kube"
-        mode: "0644"
-      vars:
-        input_files:
-          - mariadb.kube.j2
-
-    - name: Create Quadlet
-      containers.podman.podman_play:
-        kube_file: "{{ project_dir }}/{{ project_name }}.kube"
-        quadlet_filename: "{{ project_name }}"
-        network: "{{ mariadb_networks }}"
-        quadlet_options: |
-            [Install]
-            WantedBy=default.target
-        state: quadlet
-
-# END OF BLOCK
+- name: Podman service deployment
+  ansible.builtin.include_role:
+    name: podman_service_deploy

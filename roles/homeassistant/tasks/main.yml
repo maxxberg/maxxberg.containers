@@ -20,10 +20,8 @@
   ansible.builtin.set_fact:
     db_hostname: "{{ db_name }}-pod"
 
-- name: Podman service deployment
-  ansible.builtin.include_role:
-    name: podman_service_deploy
-  vars:
+- name: Workaround for lazy evaluation
+  ansible.builtin.set_fact:
     podman_service_deploy_config:
       networks:
         - name: "{{ project_name }}_default"
@@ -41,8 +39,13 @@
       mariadb:
         name: "{{ db_name | default() }}"
         networks:
-          - "{{ project_name }}_db"
+          - name: "{{ db_name }}"
+            internal: true
         user: "{{ db_user }}"
         password: "{{ db_password }}"
         root_password: "{{ db_root_password }}"
         image_tag: "{{ homeassistant_db_image_tag | mandatory }}"
+
+- name: Podman service deployment
+  ansible.builtin.include_role:
+    name: podman_service_deploy

@@ -13,10 +13,8 @@
   ansible.builtin.set_fact:
     project_dir: "{{ ansible_user_dir }}/podman/{{ project_name }}"
 
-- name: Podman service deployment
-  ansible.builtin.include_role:
-    name: podman_service_deploy
-  vars:
+- name: Workaround for lazy evaluation
+  ansible.builtin.set_fact:
     podman_service_deploy_config:
       networks:
         - name: "{{ project_name }}_default"
@@ -31,3 +29,7 @@
         - "{{ project_name }}-grafana-config"
       kube_files:
         - "{{ lookup('ansible.builtin.template', 'grafana.kube.j2') }}"
+
+- name: Podman service deployment
+  ansible.builtin.include_role:
+    name: podman_service_deploy
