@@ -1,6 +1,6 @@
 ---
 # tasks file for podman_service_deploy
-#SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: MIT-0
 - name: Create directory
   ansible.builtin.file:
     path: "{{ project_dir }}"
@@ -14,7 +14,7 @@
         name: "{{ item.name }}"
         internal: "{{ item.internal }}"
         state: present
-      with_items: "{{ podman.networks }}"
+      with_items: "{{ podman_service_deploy_config.networks }}"
 
     - name: Podman - Secrets
       containers.podman.podman_secret:
@@ -22,35 +22,37 @@
         data: |
           apiVersion: v1
           data:
-          {% for secret in podman.secrets %}
+          {% for secret in podman_service_deploy_config.secrets %}
             {{ secret.name }}: {{ secret.value | b64encode }}
           {% endfor %}
           kind: Secret
           metadata:
             name: {{ project_name }}_secrets
-      when: podman.secrets is defined and podman.secrets|length > 0
+      when: podman_service_deploy_config.secrets is defined and podman_service_deploy_config.secrets|length > 0
 
     - name: Create volumes
       containers.podman.podman_volume:
         name: "{{ item }}"
         state: present
-      with_items: "{{ podman.volumes }}"
-      when: podman.volumes is defined
+      with_items: "{{ podman_service_deploy_config.volumes }}"
+      when: podman_service_deploy_config.volumes is defined
 
-    - name: Assemble input_files
-      ansible.builtin.set_fact:
-        input_files: "{{ podman.kube_files }}"
+    # - name: Assemble input_files
+    #   ansible.builtin.set_fact:
+    #     input_files: "{{ podman_service_deploy_config.kube_files }}"
 
     - name: Template kube file
       ansible.builtin.template:
         src: ../shared/templates/concat_variable.j2
         dest: "{{ project_dir }}/{{ project_name }}.kube"
         mode: "0644"
+      vars:
+        input_files: "{{ podman_service_deploy_config.kube_files }}"
 
     - name: Prepare network list
       ansible.builtin.set_fact:
         podman_service_networks: "{{ (podman_service_networks | default([])) + [item.name] }}"
-      with_items: "{{ podman.networks }}"
+      with_items: "{{ podman_service_deploy_config.networks }}"
 
     - name: Prepare service dependencies
       ansible.builtin.set_fact:
@@ -77,20 +79,19 @@
 
 # END OF BLOCK
 
-# - name: Set mariadb_network (Needed because of lazy evaluation)
-#   ansible.builtin.set_fact:
-#     db_networks:
-#       - "{{ project_name }}_db"
-#   when: podman.mariadb is defined
+- name: Set mariadb_network (Needed because of lazy evaluation)
+  ansible.builtin.set_fact:
+    db_networks: "{{ podman_service_deploy_config.mariadb.networks }}"
+  when: podman_service_deploy_config.mariadb is defined
 
 - name: Include Mariadb
   ansible.builtin.include_role:
     name: .mariadb
   vars:
-    mariadb_name: "{{ podman.mariadb.name }}"
-    mariadb_networks: "{{ podman.mariadb.networks }}"
-    mariadb_user: "{{ podman.mariadb.user }}"
-    mariadb_password: "{{ podman.mariadb.password }}"
-    mariadb_root_password: "{{ podman.mariadb.root_password }}"
-    mariadb_image_tag: "{{ podman.mariadb.image_tag | mandatory }}"
-  when: podman.mariadb is defined
+    mariadb_name: "{{ podman_service_deploy_config.mariadb.name }}"
+    mariadb_networks: "{{ db_networks }}"
+    mariadb_user: "{{ podman_service_deploy_config.mariadb.user }}"
+    mariadb_password: "{{ podman_service_deploy_config.mariadb.password }}"
+    mariadb_root_password: "{{ podman_service_deploy_config.mariadb.root_password }}"
+    mariadb_image_tag: "{{ podman_service_deploy_config.mariadb.image_tag | mandatory }}"
+  when: podman_service_deploy_config.mariadb is defined
