@@ -1,4 +1,4 @@
-#SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: MIT-0
 ---
 # tasks file for mariadb
 
@@ -40,16 +40,19 @@
         - "{{ project_name }}-db-data"
         - "{{ project_name }}-db-config"
 
-    - name: Set input files
-      ansible.builtin.set_fact:
-        input_files:
-          - mariadb.kube.j2
+    # - name: Set input files
+    #   ansible.builtin.set_fact:
+    #     input_files:
+    #       - mariadb.kube.j2
 
     - name: Template kube file
       ansible.builtin.template:
         src: ../shared/templates/concat.j2
         dest: "{{ project_dir }}/{{ project_name }}.kube"
         mode: "0644"
+      vars:
+        input_files:
+          - mariadb.kube.j2
 
     - name: Create Quadlet
       containers.podman.podman_play:
