@@ -26,3 +26,7 @@
         - "{{ project_name }}-log"
       kube_files:
         - "{{ lookup('ansible.builtin.template', 'mqtt.kube.j2') }}"
+
+- name: Podman service deployment
+  ansible.builtin.include_role:
+    name: podman_service_deploy

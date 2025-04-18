@@ -53,3 +53,7 @@
         root_password: "{{ nextcloud_db_root_password }}"
         image_tag: "{{ nextcloud_mariadb_image_tag }}"
         args: ["--transaction-isolation=READ-COMMITTED", "--log-bin", "--binlog-format=ROW"]
+
+- name: Podman service deployment
+  ansible.builtin.include_role:
+    name: podman_service_deploy
