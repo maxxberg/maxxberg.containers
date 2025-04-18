@@ -13,104 +13,25 @@
   ansible.builtin.set_fact:
     project_dir: "{{ ansible_user_dir }}/podman/{{ project_name }}"
 
-- name: Create directory
-  ansible.builtin.file:
-    path: "{{ project_dir }}"
-    state: directory
-    mode: "0755"
-
-# - name: Create docker networks - web_backend
-#   community.docker.docker_network:
-#     name: "{{ backend_network }}"
-#     internal: true
-#     state: present
-#   when: container_engine == "docker"
-
-# - name: Create project directotory
-#   ansible.builtin.file:
-#     path: docker-compose/traefik
-#     state: directory
-#     mode: "0755"
-
-- name: Create acme.json
-  ansible.builtin.file:
-    path: "{{ project_dir }}/acme.json"
-    state: touch
-    mode: "0600"
-
-- name: Mutliblock
-  # notify: Restart {{ ansible_role_name }}
-  block:
-    - name: Podman - Networks
-      containers.podman.podman_network:
-        name: "{{ item.name }}"
-        internal: "{{ item.internal }}"
-        state: present
-      with_items:
+- name: Workaround for lazy evaluation
+  ansible.builtin.set_fact:
+    podman_service_deploy_config:
+      networks:
         - name: "{{ project_name }}_default"
           internal: false
         - name: "{{ backend_network }}"
           internal: true
-
-    - name: Upload config file
-      ansible.builtin.template:
-        src: traefik.yaml.j2
-        dest: "{{ project_dir }}/traefik.yaml"
-        mode: "0644"
-
-    - name: Podman - Secrets
-      containers.podman.podman_secret:
-        name: "{{ project_name }}_secrets"
-        data: |
-          apiVersion: v1
-          data:
-            hetzner_api_key: {{ hetzner_api_key | b64encode }}
-          kind: Secret
-          metadata:
-            creationTimestamp: null
-            name: {{ project_name }}_secrets
-
-    - name: Create volumes
-      containers.podman.podman_volume:
-        name: "{{ item }}"
-        state: present
-      with_items:
+        - name: intranet
+          internal: true
+      secrets:
+        - name: hetzner_api_key
+          value: "{{ hetzner_api_key }}"
+      volumes:
         - "{{ project_name }}-appdata"
+      kube_files:
+        - "{{ lookup('ansible.builtin.template', 'traefik.kube.j2') }}"
+        - "{{ lookup('ansible.builtin.template', 'traefik.configmap.j2') }}"
 
-    - name: Template kube file
-      ansible.builtin.template:
-        src: ../shared/templates/concat.j2
-        dest: "{{ project_dir }}/{{ project_name }}.kube"
-        mode: "0644"
-      vars:
-        input_files:
-          - traefik.kube.j2
-          - traefik.configmap.j2
-
-    - name: Create Quadlet
-      containers.podman.podman_play:
-        kube_file: "{{ project_dir }}/{{ project_name }}.kube"
-        quadlet_filename: "{{ project_name }}"
-        network:
-          - "{{ project_name }}_default"
-          - intranet
-          - "{{ backend_network }}"
-        quadlet_options: |
-            [Install]
-            WantedBy=default.target
-        state: quadlet
-
-# END OF BLOCK
-
-
-# - name: Create docker-compose.yaml
-#   ansible.builtin.template:
-#     src: docker-compose.yaml.j2
-#     dest: "{{ project_directory }}/docker-compose.yaml"
-#     force: true
-
-# - name: Docker - Traefik
-#   community.docker.docker_compose:
-#     project_src: "{{ project_directory }}"
-#     state: present
-#     pull: true
+- name: Podman service deployment
+  ansible.builtin.include_role:
+    name: podman_service_deploy
