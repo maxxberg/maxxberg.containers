@@ -13,66 +13,34 @@
   ansible.builtin.set_fact:
     project_dir: "{{ ansible_user_dir }}/podman/{{ project_name }}"
 
-- name: Create directory
-  ansible.builtin.file:
-    path: "{{ project_dir }}"
-    state: directory
-    mode: "0755"
-
-- name: Multiblock
-  # notify: Restart {{ ansible_role_name }}
-  block:
-    - name: Podman - Networks
-      containers.podman.podman_network:
-        name: "{{ item.name }}"
-        internal: "{{ item.internal }}"
-        state: present
-      with_items:
+- name: Workaround for lazy evaluation
+  ansible.builtin.set_fact:
+    podman_service_deploy_config:
+      networks:
         - name: "{{ project_name }}_default"
           internal: false
         - name: "{{ backend_network }}"
           internal: true
-
-    - name: Podman - Secrets
-      containers.podman.podman_secret:
-        name: "{{ project_name }}_secrets"
-        data: |
-          apiVersion: v1
-          data:
-            smtp_password: {{ smtp_password | default() | b64encode }}
-            admin_token: {{ admin_token | b64encode }}
-          kind: Secret
-          metadata:
-            creationTimestamp: null
-            name: {{ project_name }}_secrets
-
-    - name: Create volumes
-      containers.podman.podman_volume:
-        name: "{{ item }}"
-        state: present
-      with_items:
+      secrets:
+        - name: smtp_password
+          value: "{{ smtp_password | default() }}"
+        - name: admin_token
+          value: "{{ admin_token }}"
+      volumes:
         - "{{ project_name }}_data"
+      kube_files:
+        - "{{ lookup('ansible.builtin.template', 'vaultwarden.kube.j2') }}"
+        - "{{ lookup('ansible.builtin.template', 'vaultwarden.configmap.j2') }}"
+      mariadb:
+        name: "{{ db_name | default() }}"
+        networks:
+          - name: "{{ project_name }}_db"
+            internal: true
+        user: "{{ paperless_db_user }}"
+        password: "{{ paperless_db_password }}"
+        root_password: "{{ paperless_db_root_password }}"
+        image_tag: "{{ paperless_mariadb_image_tag | default(10) }}"
 
-    - name: Template kube file
-      ansible.builtin.template:
-        src: ../shared/templates/concat.j2
-        dest: "{{ project_dir }}/{{ project_name }}.kube"
-        mode: "0644"
-      vars:
-        input_files:
-          - vaultwarden.kube.j2
-          - vaultwarden.configmap.j2
-
-    - name: Create Quadlet
-      containers.podman.podman_play:
-        kube_file: "{{ project_dir }}/{{ project_name }}.kube"
-        quadlet_filename: "{{ project_name }}"
-        network:
-          - "{{ project_name }}_default"
-          - "{{ backend_network }}"
-        quadlet_options: |
-            [Install]
-            WantedBy=default.target
-        state: quadlet
-
-# END OF BLOCK
+- name: Podman service deployment
+  ansible.builtin.include_role:
+    name: podman_service_deploy
