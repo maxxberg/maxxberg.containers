@@ -21,88 +21,35 @@
   ansible.builtin.set_fact:
     db_hostname: "{{ db_name }}-pod"
 
-- name: Create directory
-  ansible.builtin.file:
-    path: "{{ project_dir }}"
-    state: directory
-    mode: "0755"
-
-- name: Multiblock
-  block:
-    - name: Podman - Networks
-      containers.podman.podman_network:
-        name: "{{ item.name }}"
-        internal: "{{ item.internal }}"
-        state: present
-      with_items:
+- name: Workaround for lazy evaluation
+  ansible.builtin.set_fact:
+    podman_service_deploy_config:
+      networks:
         - name: "{{ project_name }}_default"
           internal: false
         - name: "{{ nextcloud_backend_network }}"
           internal: true
         - name: "{{ project_name }}_db"
           internal: true
-
-    # - name: Podman - Secrets
-    #   containers.podman.podman_secret:
-    #     name: "{{ project_name }}_secrets"
-    #     data: |
-    #       apiVersion: v1
-    #       data:
-    #         db_password: {{ nextcloud_db_password | b64encode }}
-    #         db_user: {{ nextcloud_db_user | b64encode }}
-    #       kind: Secret
-    #       metadata:
-    #         name: {{ project_name }}_secrets
-
-    - name: Create volumes
-      containers.podman.podman_volume:
-        name: "{{ item }}"
-        state: present
-      with_items:
+      secrets:
+        - name: db_password
+          value: "{{ paperless_db_password }}"
+        - name: db_user
+          value: "{{ paperless_db_user }}"
+      volumes:
         - "{{ project_name }}-config"
         - "{{ project_name }}-html"
         - "{{ project_name }}-custom_apps"
-
-    - name: Template kube file
-      ansible.builtin.template:
-        src: ../shared/templates/concat.j2
-        dest: "{{ project_dir }}/{{ project_name }}.kube"
-        mode: "0644"
-      vars:
-        input_files:
-          - nextcloud.kube.j2
-          - nextcloud.configmap.j2
-
-    - name: Create Quadlet
-      containers.podman.podman_play:
-        kube_file: "{{ project_dir }}/{{ project_name }}.kube"
-        quadlet_filename: "{{ project_name }}"
-        network:
-          - "{{ project_name }}_default"
-          - "{{ backend_network }}"
-          - "{{ project_name }}_db"
-        quadlet_options: |
-            [Install]
-            WantedBy=default.target
-            [Unit]
-            Requires={{ db_name }}.service
-        state: quadlet
-
-# END OF BLOCK
-
-- name: Set mariadb_network (Needed because of lazy evaluation)
-  ansible.builtin.set_fact:
-    db_networks:
-      - "{{ project_name }}_db"
-
-- name: Include Mariadb
-  ansible.builtin.include_role:
-    name: .mariadb
-  vars:
-    mariadb_name: "{{ db_name }}"
-    mariadb_networks: "{{ db_networks }}"
-    mariadb_user: "{{ nextcloud_config.dbuser }}"
-    mariadb_password: "{{ nextcloud_config.dbpassword }}"
-    mariadb_root_password: "{{ nextcloud_db_root_password }}"
-    mariadb_image_tag: "{{ nextcloud_mariadb_image_tag }}"
-    mariadb_args: ["--transaction-isolation=READ-COMMITTED", "--log-bin", "--binlog-format=ROW"]
+      kube_files:
+        - "{{ lookup('ansible.builtin.template', 'nextcloud.kube.j2') }}"
+        - "{{ lookup('ansible.builtin.template', 'nextcloud.configmap.j2') }}"
+      mariadb:
+        networks:
+          - name: "{{ project_name }}_db"
+            internal: true
+        name: "{{ db_name }}"
+        user: "{{ nextcloud_config.dbuser }}"
+        password: "{{ nextcloud_config.dbpassword }}"
+        root_password: "{{ nextcloud_db_root_password }}"
+        image_tag: "{{ nextcloud_mariadb_image_tag }}"
+        args: ["--transaction-isolation=READ-COMMITTED", "--log-bin", "--binlog-format=ROW"]

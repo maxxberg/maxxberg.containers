@@ -99,4 +99,5 @@
     mariadb_password: "{{ podman_service_deploy_config.mariadb.password }}"
     mariadb_root_password: "{{ podman_service_deploy_config.mariadb.root_password }}"
     mariadb_image_tag: "{{ podman_service_deploy_config.mariadb.image_tag | mandatory }}"
+    mariadb_args: "{{ podman_service_deploy_config.mariadb.args | default() }}"
   when: podman_service_deploy_config.mariadb is defined
