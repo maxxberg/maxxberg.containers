@@ -13,51 +13,16 @@
   ansible.builtin.set_fact:
     project_dir: "{{ ansible_user_dir }}/podman/{{ project_name }}"
 
-- name: Create directory
-  ansible.builtin.file:
-    path: "{{ project_dir }}"
-    state: directory
-    mode: "0755"
-
-- name: Mutliblock
-  # notify: Restart {{ ansible_role_name }}
-  block:
-    - name: Podman - Networks
-      containers.podman.podman_network:
-        name: "{{ item.name }}"
-        internal: "{{ item.internal }}"
-        state: present
-      with_items:
+- name: Workaround for lazy evaluation
+  ansible.builtin.set_fact:
+    podman_service_deploy_config:
+      networks:
         - name: "{{ project_name }}_default"
           internal: false
-
-    - name: Create volumes
-      containers.podman.podman_volume:
-        name: "{{ item }}"
-        state: present
-      with_items:
+      secrets: []
+      volumes:
         - "{{ project_name }}-data"
         - "{{ project_name }}-config"
         - "{{ project_name }}-log"
-
-    - name: Template kube file
-      ansible.builtin.template:
-        src: ../shared/templates/concat.j2
-        dest: "{{ project_dir }}/{{ project_name }}.kube"
-        mode: "0644"
-      vars:
-        input_files:
-          - mqtt.kube.j2
-
-    - name: Create Quadlet
-      containers.podman.podman_play:
-        kube_file: "{{ project_dir }}/{{ project_name }}.kube"
-        quadlet_filename: "{{ project_name }}"
-        network:
-          - "{{ project_name }}_default"
-        quadlet_options: |
-            [Install]
-            WantedBy=default.target
-        state: quadlet
-
-# END OF BLOCK
+      kube_files:
+        - "{{ lookup('ansible.builtin.template', 'mqtt.kube.j2') }}"
