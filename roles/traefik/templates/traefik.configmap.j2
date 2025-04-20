@@ -25,13 +25,11 @@ data:
       letsdnstest:
         acme:
           caServer: https://acme-staging-v02.api.letsencrypt.org/directory
-          email: orik10@web.de
           storage: /appdata/acme.json
           dnsChallenge:
             provider: hetzner
       letsdns:
         acme:
-          email: orik10@web.de
           storage: /appdata/acme.json
 {% if traefik_challenge_type == "dns" %}
           dnsChallenge:
