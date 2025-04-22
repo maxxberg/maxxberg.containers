@@ -7,3 +7,4 @@ export_dir:
 consume_dir:
 media_dir:
 certificate_resolver: letsdns
+paperless_enable_tls: true

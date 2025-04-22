@@ -16,14 +16,19 @@ spec:
       labels:
         app: {{ project_name }}
         traefik.enable: true
+        traefik.http.routers.{{ project_name }}.rule: Host(`{{ paperless_domain | mandatory }}`)
+        traefik.docker.network: {{ backend_network }}
+{% if paperless_enable_tls == true %}
         traefik.http.services.{{ project_name }}-sec.loadbalancer.server.port: 8000
         traefik.http.routers.{{ project_name }}-sec.rule: Host(`{{ paperless_domain | mandatory }}`)
-        traefik.docker.network: {{ backend_network }}
         traefik.http.routers.{{ project_name }}-sec.tls: true
         traefik.http.routers.{{ project_name }}-sec.tls.certResolver: letsdns
-        traefik.http.routers.{{ project_name }}.rule: Host(`{{ paperless_domain }}`)
-        traefik.http.routers.{{ project_name }}.middlewares: redirect-to-https@file
         traefik.http.routers.{{ project_name }}-sec.middlewares: security_headers@file
+        traefik.http.routers.{{ project_name }}.middlewares: redirect-to-https@file
+{% endif %}
+{% if paperless_enable_tls == false %}
+        traefik.http.services.{{ project_name }}.loadbalancer.server.port: 8000
+{% endif %}
       name: {{ project_name }}
     spec:
       containers:
