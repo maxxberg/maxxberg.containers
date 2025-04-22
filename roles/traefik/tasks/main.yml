@@ -25,7 +25,7 @@
           internal: true
       secrets:
         - name: hetzner_api_key
-          value: "{{ hetzner_api_key }}"
+          value: "{{ hetzner_api_key | default('') }}"
       volumes:
         - "{{ project_name }}-appdata"
       kube_files:

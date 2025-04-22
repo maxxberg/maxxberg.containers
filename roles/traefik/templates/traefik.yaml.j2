@@ -15,23 +15,9 @@ entryPoints:
     address: ":443"
 
 certificatesResolvers:
-  letsdnstest:
-    acme:
-      caServer: https://acme-staging-v02.api.letsencrypt.org/directory
-      email: orik10@web.de
-      storage: acme.json
-      dnsChallenge:
-        provider: hetzner
-  letsdns:
-    acme:
-      email: orik10@web.de
-      storage: acme.json
-{% if traefik_challenge_type == "dns" %}
-      dnsChallenge:
-        provider: hetzner
-{% elif traefik_challenge_type == "tls" %}
-      tlsChallenge: {}
-{% endif %}
+{% for certResolver in traefik_config.certResolvers %}
+  {{ certResolver }}
+{% endfor %}
         
 http:
   middlewares:
