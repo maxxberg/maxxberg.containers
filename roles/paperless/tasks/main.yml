@@ -44,6 +44,7 @@
         - "{{ lookup('ansible.builtin.template', 'paperless.configmap.j2') }}"
       mariadb:
         name: "{{ db_name | default() }}"
+        dbname: "{{ project_name }}"
         networks:
           - name: "{{ project_name }}_db"
             internal: true

@@ -28,7 +28,7 @@ spec:
               name: db_data
           env:
             - name: MARIADB_DATABASE
-              value: {{ db_name }}
+              value: {{ mariadb_dbname }}
             - name: MARIADB_USER
               valueFrom:
                 secretKeyRef:

@@ -95,6 +95,7 @@
     name: .mariadb
   vars:
     mariadb_name: "{{ podman_service_deploy_config.mariadb.name }}"
+    mariadb_dbname: "{{ podman_service_deploy_config.mariadb.dbname }}"
     mariadb_networks: "{{ db_networks }}"
     mariadb_user: "{{ podman_service_deploy_config.mariadb.user }}"
     mariadb_password: "{{ podman_service_deploy_config.mariadb.password }}"
