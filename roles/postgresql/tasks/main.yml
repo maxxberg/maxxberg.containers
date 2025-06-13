@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: MIT-0
+---
+# tasks file for postgresql
+
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_name: "{{ postgresql_name | mandatory }}"
+
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_dir: "{{ ansible_user_dir }}/podman/{{ project_name }}"
+
+- name: Workaround for lazy evaluation
+  ansible.builtin.set_fact:
+    podman_service_deploy_config:
+      networks: "{{ postgresql_networks }}"
+      secrets:
+        - name: db_user
+          value: "{{ postgresql_user }}"
+        - name: db_password
+          value: "{{ postgresql_password }}"
+      volumes:
+        - "{{ project_name }}-data"
+      kube_files:
+        - "{{ lookup('ansible.builtin.template', 'postgresql.kube.j2') }}"
+
+- name: Podman service deployment
+  ansible.builtin.include_role:
+    name: podman_service_deploy
