@@ -1,0 +1,17 @@
+- name: Set postgresql_network (Needed because of lazy evaluation)
+  ansible.builtin.set_fact:
+    db_networks: "{{ podman_service_deploy_config.postgresql.networks }}"
+  when: podman_service_deploy_config.postgresql is defined
+
+- name: Include Postgresql
+  ansible.builtin.include_role:
+    name: postgresql
+  vars:
+    mariadb_name: "{{ podman_service_deploy_configpostgresql.name }}"
+    mariadb_dbname: "{{ podman_service_deploy_config.postgresql.dbname }}"
+    mariadb_networks: "{{ db_networks }}"
+    mariadb_user: "{{ podman_service_deploy_config.postgresql.user }}"
+    mariadb_password: "{{ podman_service_deploy_config.postgresql.password }}"
+    mariadb_image_tag: "{{ podman_service_deploy_config.postgresql.image_tag | mandatory }}"
+    mariadb_args: "{{ podman_service_deploy_config.postgresql.args | default() }}"
+  when: podman_service_deploy_config.postgresql is defined

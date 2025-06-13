@@ -85,21 +85,12 @@
 
 # END OF BLOCK
 
-- name: Set mariadb_network (Needed because of lazy evaluation)
-  ansible.builtin.set_fact:
-    db_networks: "{{ podman_service_deploy_config.mariadb.networks }}"
-  when: podman_service_deploy_config.mariadb is defined
+- name: Include Postgresql
+  ansible.builtin.include_tasks:
+    file: postgresql.yaml
+  when: podman_service_deploy_config.postgresql is defined
 
 - name: Include Mariadb
-  ansible.builtin.include_role:
-    name: .mariadb
-  vars:
-    mariadb_name: "{{ podman_service_deploy_config.mariadb.name }}"
-    mariadb_dbname: "{{ podman_service_deploy_config.mariadb.dbname }}"
-    mariadb_networks: "{{ db_networks }}"
-    mariadb_user: "{{ podman_service_deploy_config.mariadb.user }}"
-    mariadb_password: "{{ podman_service_deploy_config.mariadb.password }}"
-    mariadb_root_password: "{{ podman_service_deploy_config.mariadb.root_password }}"
-    mariadb_image_tag: "{{ podman_service_deploy_config.mariadb.image_tag | mandatory }}"
-    mariadb_args: "{{ podman_service_deploy_config.mariadb.args | default() }}"
+  ansible.builtin.include_tasks:
+    file: mariadb.yaml
   when: podman_service_deploy_config.mariadb is defined
