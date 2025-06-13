@@ -31,11 +31,6 @@
           internal: true
         - name: "{{ project_name }}_db"
           internal: true
-      secrets:
-        - name: db_password
-          value: "{{ paperless_db_password }}"
-        - name: db_user
-          value: "{{ paperless_db_user }}"
       volumes:
         - "{{ project_name }}-config"
         - "{{ project_name }}-html"
@@ -48,6 +43,7 @@
           - name: "{{ project_name }}_db"
             internal: true
         name: "{{ db_name }}"
+        dbname: "{{ project_name }}"
         user: "{{ nextcloud_config.dbuser }}"
         password: "{{ nextcloud_config.dbpassword }}"
         root_password: "{{ nextcloud_db_root_password }}"

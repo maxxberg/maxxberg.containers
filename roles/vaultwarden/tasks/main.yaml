@@ -31,15 +31,6 @@
       kube_files:
         - "{{ lookup('ansible.builtin.template', 'vaultwarden.kube.j2') }}"
         - "{{ lookup('ansible.builtin.template', 'vaultwarden.configmap.j2') }}"
-      mariadb:
-        name: "{{ db_name | default() }}"
-        networks:
-          - name: "{{ project_name }}_db"
-            internal: true
-        user: "{{ paperless_db_user }}"
-        password: "{{ paperless_db_password }}"
-        root_password: "{{ paperless_db_root_password }}"
-        image_tag: "{{ paperless_mariadb_image_tag | default(10) }}"
 
 - name: Podman service deployment
   ansible.builtin.include_role:
