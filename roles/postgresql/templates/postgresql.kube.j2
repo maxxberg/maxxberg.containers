@@ -23,6 +23,12 @@ spec:
 {% if postgresql_args is defined %}
           args: {{ postgresql_args }}
 {% endif %}
+          livenessProbe:
+            exec: ["pg_isready", "-d {{ postgresql_dbname }}", "-U "{{ postgresql_user }}"]
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 5
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: db_data
