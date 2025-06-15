@@ -4,7 +4,7 @@
 
 - name: Include Redis
   ansible.builtin.include_role:
-    name: .mariadb
+    name: redis
   vars:
     redis_name: "{{ podman_service_deploy_config.redis.name }}"
     redis_networks: "{{ redis_networks }}"
