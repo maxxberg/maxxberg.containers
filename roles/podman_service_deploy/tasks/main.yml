@@ -94,3 +94,8 @@
   ansible.builtin.include_tasks:
     file: mariadb.yaml
   when: podman_service_deploy_config.mariadb is defined
+
+- name: Include Redis
+  ansible.builtin.include_tasks:
+    file: redis.yaml
+  when: podman_service_deploy_config.redis is defined
