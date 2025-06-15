@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: MIT-0
+---
+# tasks file for redis
+
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_name: "{{ redis_name | mandatory }}"
+
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_dir: "{{ ansible_user_dir }}/podman/{{ project_name }}"
+
+- name: Workaround for lazy evaluation
+  ansible.builtin.set_fact:
+    podman_service_deploy_config:
+      networks: "{{ rediss_networks }}"
+      secrets: []
+      volumes:
+        - "{{ project_name }}-data"
+      kube_files:
+        - "{{ lookup('ansible.builtin.template', 'redis.kube.j2') }}"
+
+- name: Podman service deployment
+  ansible.builtin.include_role:
+    name: podman_service_deploy
