@@ -24,7 +24,8 @@ spec:
           args: {{ postgresql_args }}
 {% endif %}
           livenessProbe:
-            exec: ["pg_isready", "-d {{ postgresql_dbname }}", "-U "{{ postgresql_user }}"]
+            exec:
+              command: ["pg_isready", "-d", "{{ postgresql_dbname }}", "-U", "{{ postgresql_user }}"]
             initialDelaySeconds: 20
             periodSeconds: 30
             timeoutSeconds: 5

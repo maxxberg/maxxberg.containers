@@ -13,7 +13,7 @@
 - name: Workaround for lazy evaluation
   ansible.builtin.set_fact:
     podman_service_deploy_config:
-      networks: "{{ rediss_networks }}"
+      networks: "{{ redis_networks }}"
       secrets: []
       volumes:
         - "{{ project_name }}-data"

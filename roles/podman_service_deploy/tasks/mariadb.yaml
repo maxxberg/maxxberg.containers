@@ -1,3 +1,7 @@
+- name: Save configuration
+  ansible.builtin.set_fact:
+    podman_service_deploy_config_save: "{{ podman_service_deploy_config }}"
+
 - name: Set mariadb_network (Needed because of lazy evaluation)
   ansible.builtin.set_fact:
     db_networks: "{{ podman_service_deploy_config.mariadb.networks }}"
@@ -14,3 +18,7 @@
     mariadb_root_password: "{{ podman_service_deploy_config.mariadb.root_password }}"
     mariadb_image_tag: "{{ podman_service_deploy_config.mariadb.image_tag | mandatory }}"
     mariadb_args: "{{ podman_service_deploy_config.mariadb.args | default() }}"
+
+- name: Restore configuration
+  ansible.builtin.set_fact:
+    podman_service_deploy_config: "{{ podman_service_deploy_config_save }}"

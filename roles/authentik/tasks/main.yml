@@ -1,0 +1,83 @@
+# SPDX-License-Identifier: MIT-0
+---
+# tasks file for authentik
+- name: Set project base name
+  ansible.builtin.set_fact:
+    project_base_name: authentik
+
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_name: "{{ project_base_name }}{{ project_suffix | default('') }}"
+
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_dir: "{{ ansible_user_dir }}/podman/{{ project_name }}"
+
+- name: Set database service name
+  ansible.builtin.set_fact:
+    postgresql_name: "{{ project_name }}_db"
+
+- name: Set database hostname
+  ansible.builtin.set_fact:
+    postgresql_hostname: "{{ postgresql_name }}-pod"
+
+- name: Set Redis server name
+  ansible.builtin.set_fact:
+    redis_name: "{{ project_name }}_redis"
+
+- name: Set Redis hostname
+  ansible.builtin.set_fact:
+    redis_hostname: "{{ redis_name }}-pod"
+
+- name: Set domain
+  ansible.builtin.set_fact:
+    domain: "{{ authentik_domain }}"
+
+- name: Workaround for lazy evaluation
+  ansible.builtin.set_fact:
+    podman_service_deploy_config:
+      networks:
+        - name: "{{ project_name }}_default"
+          internal: false
+        - name: "{{ backend_network }}"
+          internal: true
+        - name: "{{ project_name }}_db"
+          internal: true
+        - name: "{{ project_name }}_redis"
+          internal: true
+      secrets:
+        - name: authentik_secret_key
+          value: "{{ authentik_secret_key }}"
+        - name: authentik_postgresql__password
+          value: "{{ authentik_postgresql_password }}"
+        - name: authentik_email__username
+          value: "{{ authentik_email__username }}"
+        - name: authentik_email__password
+          value: "{{ authentik_email__password }}"
+      volumes:
+        - "{{ project_name }}-data"
+        - "{{ project_name }}-templates"
+        - "{{ project_name }}-certs"
+      kube_files:
+        - "{{ lookup('ansible.builtin.template', 'authentik-server.kube.j2') }}"
+        - "{{ lookup('ansible.builtin.template', 'authentik.configmap.j2') }}"
+      postgresql:
+        name: "{{ postgresql_name | mandatory }}"
+        dbname: "{{ project_name }}"
+        networks:
+          - name: "{{ project_name }}_db"
+            internal: true
+        user: "{{ authentik_db_user }}"
+        password: "{{ authentik_postgresql_password }}"
+        image_tag: "{{ authentik_postgresql_image_tag | default('16-alpine') }}"
+      redis:
+        name: "{{ redis_name | mandatory }}"
+        networks:
+          - name: "{{ project_name }}_redis"
+            internal: true
+        args: ["--save", "60 1", "--loglevel", "warning"]
+
+
+- name: Podman service deployment
+  ansible.builtin.include_role:
+    name: podman_service_deploy

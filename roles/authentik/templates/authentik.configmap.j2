@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ project_name }}-env
+data:
+  AUTHENTIK_REDIS__HOST: redis
+  AUTHENTIK_POSTGRESQL__HOST: {{ postgresql_hostname }}
+  AUTHENTIK_POSTGRESQL__USER: {{ authentik_db_user }}
+  AUTHENTIK_POSTGRESQL__NAME: {{ project_name }}
+  AUTHENTIK_EMAIL__HOST: {{ authentik_email__host | default() }}
+  AUTHENTIK_EMAIL__PORT: {{ authentik_email__port | default() }}
+  AUTHENTIK_EMAIL__USE_TLS: {{ authentik_email__tls | default(false) }}
+  AUTHENTIK_EMAIL__USE_SSL: {{ authentik_email__ssl | default(true) }}
+  AUTHENTIK_EMAIL__TIMEOUT: {{ authentik_email__timeout | default(10) }}
+  AUTHENTIK_EMAIL__FROM: {{ authentik_email__from | default() }}

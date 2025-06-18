@@ -64,10 +64,20 @@
       ansible.builtin.set_fact:
         podman_service_requires: []
 
-    - name: Add mariadb to service dependencies
+    - name: Add MariaDB to service dependencies
       ansible.builtin.set_fact:
-        podman_service_requires: "{{ podman_service_requires + [db_name] }}"
-      when: db_name is defined
+        podman_service_requires: "{{ podman_service_requires + [podman_service_deploy_config.mariadb.name] }}"
+      when: podman_service_deploy_config.mariadb is defined
+
+    - name: Add Postgresql to service dependencies
+      ansible.builtin.set_fact:
+        podman_service_requires: "{{ podman_service_requires + [podman_service_deploy_config.postgresql.name] }}"
+      when: podman_service_deploy_config.postgresql is defined
+
+    - name: Add Redis to service dependencies
+      ansible.builtin.set_fact:
+        podman_service_requires: "{{ podman_service_requires + [redis_name] }}"
+      when: podman_service_deploy_config.redis is defined
 
     - name: Create Quadlet
       containers.podman.podman_play:
