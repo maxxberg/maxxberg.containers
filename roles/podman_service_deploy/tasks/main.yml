@@ -57,7 +57,7 @@
 
     - name: Prepare network list
       ansible.builtin.set_fact:
-        podman_service_networks: "{{ (podman_service_networks | default([])) + [item.name] }}"
+        podman_service_networks: "{% if item.ipv4_address is defined %}{{ (podman_service_networks | default([])) + [item.name + ':ip=' + item.ipv4_address] }}{% else %}{{ (podman_service_networks | default([])) + [item.name] }}{% endif %}"
       with_items: "{{ podman_service_deploy_config.networks }}"
 
     - name: Prepare service dependencies

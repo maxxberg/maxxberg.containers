@@ -38,6 +38,7 @@
         - "{{ lookup('ansible.builtin.template', 'homeassistant.kube.j2') }}"
       mariadb:
         name: "{{ db_name | default() }}"
+        dbname: "{{ project_name }}"
         networks:
           - name: "{{ db_name }}"
             internal: true

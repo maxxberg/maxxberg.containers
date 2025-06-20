@@ -27,6 +27,7 @@
         - name: intranet
           internal: true
           subnet: "{{ intranet_network | mandatory }}"
+          ipv4_address: "{{ pihole_ipv4_address }}"
       secrets:
         - name: web_password
           value: "{{ pihole_web_password }}"
