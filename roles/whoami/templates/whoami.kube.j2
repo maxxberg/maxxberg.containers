@@ -1,0 +1,31 @@
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  annotations:
+    io.containers.autoupdate: registry
+  name: {{ project_name }}
+  labels:
+    app: {{ project_name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ project_name }}
+  template:
+    metadata:
+      labels:
+        app: {{ project_name }}
+        traefik.enable: "true"
+        traefik.http.services.{{ project_name }}-sec.loadbalancer.server.port: "80"
+        traefik.http.routers.{{ project_name }}.rule: Host(`{{ domain | mandatory }}`)
+        traefik.http.routers.{{ project_name }}-sec.rule: Host(`{{ domain | mandatory }}`)
+        traefik.docker.network: web_backend
+        traefik.http.routers.{{ project_name }}-sec.tls: "true"
+        traefik.http.routers.{{ project_name }}-sec.tls.certResolver: letsdns
+        traefik.http.routers.{{ project_name }}-sec.middlewares: security_headers@file, authentik@file
+        traefik.http.routers.{{ project_name }}.middlewares: redirect-to-https@file
+      name: {{ project_name }}
+    spec:
+      containers:
+        - name: authentik-server
+          image: "docker.io/traefik/whoami:latest"
