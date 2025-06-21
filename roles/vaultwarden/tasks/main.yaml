@@ -13,6 +13,10 @@
   ansible.builtin.set_fact:
     project_dir: "{{ ansible_user_dir }}/podman/{{ project_name }}"
 
+- name: Set domain
+  ansible.builtin.set_fact:
+    domain: "{{ vaultwarden_domain }}"
+
 - name: Workaround for lazy evaluation
   ansible.builtin.set_fact:
     podman_service_deploy_config:
