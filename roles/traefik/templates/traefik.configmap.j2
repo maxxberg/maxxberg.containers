@@ -15,6 +15,23 @@ data:
       dashboard: {{ traefik_api_dashboard }}
       insecure: {{ traefik_api_insecure }}
 
+    accessLog:
+      filePath: "/logs/traefik.log"
+      format: json
+      #filters:
+      #  statusCodes:
+      #    - "200"
+      #    - "400-599"
+        #retryAttempts: true
+        #minDuration: "10ms"
+      # collect logs as in-memory buffer before writing into log file
+      bufferingSize: 0
+      fields:
+        headers:
+          defaultMode: drop # drop all headers per default
+          names:
+              User-Agent: keep # log user agent strings
+
     entryPoints:
       http:
         address: ":80"
@@ -33,7 +50,7 @@ data:
           storage: /appdata/acme.json
 {% if traefik_challenge_type == "dns" %}
           dnsChallenge:
-            provider: hetzner
+            provider: {{ traefik_dns_challenge_provider }}
 {% elif traefik_challenge_type == "tls" %}
           tlsChallenge: {}
 {% endif %}
@@ -58,7 +75,3 @@ data:
       routers:
         {{ routers | default() | to_nice_yaml(indent=2) | indent(8) }}
 {% endif %}
-
-    accessLog: {}
-    log:
-      level: warn

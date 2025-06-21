@@ -3,7 +3,3 @@
 traefik_api_dashboard: "false"
 traefik_api_insecure: "false"
 traefik_challenge_type: dns
-traefik_image_tag: v3.1
-
-
-container_restart_list: []
