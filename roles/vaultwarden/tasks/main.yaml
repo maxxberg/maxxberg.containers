@@ -27,9 +27,9 @@
           internal: true
       secrets:
         - name: smtp_password
-          value: "{{ smtp_password | default() }}"
+          value: "{{ vaultwarden_vaultwarden_smtp_password | default() }}"
         - name: admin_token
-          value: "{{ admin_token }}"
+          value: "{{ vaultwarden_admin_token }}"
       volumes:
         - "{{ project_name }}_data"
       kube_files:

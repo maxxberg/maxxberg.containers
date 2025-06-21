@@ -9,12 +9,12 @@ data:
     DOMAIN: "https://{{ domain }}"
     LOG_FILE: "/data/vaultwarden.log"
     LOG_LEVEL: "warn"
-{% if smtp_enabled | default("false") == "true" %}
-    SMTP_HOST: {{ smtp_host | default() }}
-    SMTP_FROM: {{ smtp_from | default() }}
-    SMTP_FROM_NAME: {{ smtp_from_name | default() }}
-    SMTP_SECURITY: {{ smtp_security | default("force_tls") }}
-    SMTP_PORT: {{ smtp_port | default("465") }}
-    SMTP_USERNAME: {{ smtp_username | default() }}
-    SMTP_TIMEOUT: {{ smtp_timeout | default("15") }}
+{% if vaultwarden_smtp_enabled | default("false") == "true" %}
+    SMTP_HOST: {{ vaultwarden_smtp_host | default() }}
+    SMTP_FROM: {{ vaultwarden_smtp_from | default() }}
+    SMTP_FROM_NAME: {{ vaultwarden_smtp_from_name | default() }}
+    SMTP_SECURITY: {{ vaultwarden_smtp_security | default("force_tls") }}
+    SMTP_PORT: {{ vaultwarden_smtp_port | default("465") }}
+    SMTP_USERNAME: {{ vaultwarden_smtp_username | default() }}
+    SMTP_TIMEOUT: {{ vaultwarden_smtp_timeout | default("15") }}
 {% endif %}
