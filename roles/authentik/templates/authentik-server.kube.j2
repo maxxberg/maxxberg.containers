@@ -15,15 +15,15 @@ spec:
     metadata:
       labels:
         app: {{ project_name }}
-   #     traefik.enable: "true"
-   #     traefik.http.services.{{ project_name }}-sec.loadbalancer.server.port: "9000"
-   #     traefik.http.routers.homeassistant-sec.rule: Host(`{{ domain | mandatory }}`)
-   #     traefik.docker.network: web_backend
-   #     traefik.http.routers.{{ project_name }}-sec.tls: "true"
-   #     traefik.http.routers.{{ project_name }}-sec.tls.certResolver: letsdns
-   #     traefik.http.routers.{{ project_name }}-sec.middlewares: security_headers@file
-   #     traefik.http.routers.{{ project_name }}.rule: Host(`{{ domain }}`)
-   #     traefik.http.routers.{{ project_name }}.middlewares: redirect-to-https@file
+        traefik.enable: "true"
+        traefik.http.services.{{ project_name }}-sec.loadbalancer.server.port: "9000"
+        traefik.http.routers.{{ project_name }}-sec.rule: Host(`{{ domain | mandatory }}`)
+        traefik.docker.network: web_backend
+        traefik.http.routers.{{ project_name }}-sec.tls: "true"
+        traefik.http.routers.{{ project_name }}-sec.tls.certResolver: letsdns
+        traefik.http.routers.{{ project_name }}-sec.middlewares: security_headers@file
+        traefik.http.routers.{{ project_name }}.rule: Host(`{{ domain }}`)
+        traefik.http.routers.{{ project_name }}.middlewares: redirect-to-https@file
       name: {{ project_name }}
     spec:
       containers:
