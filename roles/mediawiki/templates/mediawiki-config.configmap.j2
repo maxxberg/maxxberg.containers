@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ project_name }}-config
+data:
+{% if mediawiki_initial_setup|default(False) == False %}
+  LocalSettings.php: |
+{% macro someop() %}{% include 'LocalSettings.php' %}{% endmacro %}
+    {{ someop() | indent(4) }}
+{% endif %}

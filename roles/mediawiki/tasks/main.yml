@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: MIT-0
+---
+# tasks file for mediawiki
+- name: Set project base name
+  ansible.builtin.set_fact:
+    project_base_name: mediawiki
+
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_name: "{{ project_base_name }}{{ project_suffix | default('') }}"
+
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_dir: "{{ ansible_user_dir }}/podman/{{ project_name }}"
+
+- name: Set database service name
+  ansible.builtin.set_fact:
+    db_name: "{{ project_name }}_db"
+
+- name: Set database hostname
+  ansible.builtin.set_fact:
+    db_hostname: "{{ db_name }}-pod"
+
+- name: Set domain
+  ansible.builtin.set_fact:
+    domain: "{{ mediawiki_domain }}"
+
+- name: Workaround for lazy evaluation
+  ansible.builtin.set_fact:
+    podman_service_deploy_config:
+      networks:
+        - name: "{{ project_name }}_default"
+          internal: false
+        - name: "{{ project_name }}_db"
+          internal: true
+        - name: "{{ backend_network }}"
+          internal: true
+      volumes:
+        - "{{ project_name }}-images"
+        - "{{ project_name }}-sitemap"
+      kube_files:
+        - "{{ lookup('ansible.builtin.template', 'mediawiki.kube.j2') }}"
+        - "{{ lookup('ansible.builtin.template', 'mediawiki-env.configmap.j2') }}"
+        - "{{ lookup('ansible.builtin.template', 'mediawiki-config.configmap.j2') }}"
+      mariadb:
+        networks:
+          - name: "{{ project_name }}_db"
+            internal: true
+        name: "{{ db_name }}"
+        dbname: "{{ project_name }}"
+        user: "{{ mediawiki_config.wgDBuser }}"
+        password: "{{ mediawiki_config.wgDBpassword }}"
+        root_password: "{{ mediawiki_config.db_root_password }}"
+        image_tag: "{{ mediawiki_mariadb_image_tag }}"
+
+- name: Podman service deployment
+  ansible.builtin.include_role:
+    name: podman_service_deploy

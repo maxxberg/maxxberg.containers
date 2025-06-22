@@ -1,0 +1,71 @@
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  annotations:
+    io.containers.autoupdate: registry
+  name: {{ project_name }}
+  labels:
+    app: {{ project_name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ project_name }}
+  template:
+    metadata:
+      labels:
+        app: {{ project_name }}
+        traefik.enable: "true"
+        traefik.http.services.{{ project_name }}-sec.loadbalancer.server.port: "80"
+        traefik.http.routers.{{ project_name }}-sec.rule: Host(`{{ domain | mandatory }}`)
+        traefik.docker.network: web_backend
+        traefik.http.routers.{{ project_name }}-sec.tls: "true"
+        traefik.http.routers.{{ project_name }}-sec.tls.certResolver: letsdns
+        traefik.http.routers.{{ project_name }}-sec.middlewares: security_headers@file
+        traefik.http.routers.{{ project_name }}.rule: Host(`{{ domain }}`)
+        traefik.http.routers.{{ project_name }}.middlewares: redirect-to-https@file
+      name: {{ project_name }}
+    spec:
+      containers:
+        - name: wiki
+          image: "docker.io/mediawiki:{{ mediawiki_wiki_version }}"
+          envFrom:
+            - configMapRef:
+                name: {{ project_name }}-env
+          volumeMounts:
+            - mountPath: /var/www/html/images
+              name: images
+            - mountPath: /var/www/html/sitemap
+              name: sitemap
+{% if mediawiki_initial_setup|default(False) == False %}
+            - mountPath: /var/www/html/LocalSettings.php
+              name: config
+              subPath: LocalSettings.php
+              readonly: true
+{% endif %}
+{% for ext in mediawiki_config.extensions %}
+            - mountPath: /var/www/html/extensions/{{ ext }}
+              name: {{ ext }}
+              readonly: true
+{% endfor %}
+        - name: memcached
+          image: docker.io/memcached:alpine
+          args: ["-d", "-l", "127.0.0.1", "-p", "11211", "-m", "{{ mediawiki_cache }}"]
+          environment:
+            TZ: {{ mediawiki_tz }}
+      volumes:
+        - name: images
+          persistentVolumeClaim:
+            claimName: {{ project_name }}-images
+        - name: sitemap
+          persistentVolumeClaim:
+            claimName: {{ project_name }}-sitemap
+        - name: config
+          configMap:
+            name: {{ project_name }}-config
+{% for ext in mediawiki_config.extensions %}
+        - name: {{ ext }}
+          hostPath:
+            path: {{ project_dir }}/extensions/{{ ext }}
+            type: Directory
+{% endfor %}
