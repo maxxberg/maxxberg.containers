@@ -27,7 +27,7 @@ $wgSitename = "{{ mediawiki_config.wgSitename | mandatory }}";
 ## (like /w/index.php/Page_title to /wiki/Page_title) please see:
 ## https://www.mediawiki.org/wiki/Manual:Short_URL
 $wgScriptPath = "";
-
+$wgArticlePath = '/wiki/$1';
 ## The protocol and server name to use in fully-qualified URLs
 $wgServer = "{{ mediawiki_config.wgServer | mandatory }}";
 
@@ -157,3 +157,8 @@ $wgAllowUserCss = true;
 
 # End of automatically generated settings.
 # Add more configuration options below.
+$wgPluggableAuth_EnableLocalLogin = true;
+
+{% if mediawiki_config.wgPluggableAuth_Config is defined %}
+$wgPluggableAuth_Config = {{ mediawiki_config.wgPluggableAuth_Config }}
+{% endif %}
