@@ -15,11 +15,11 @@ spec:
     metadata:
       labels:
         app: {{ project_name }}
+        traefik.docker.network: web_backend
         traefik.enable: "true"
         traefik.http.services.{{ project_name }}-sec.loadbalancer.server.port: "80"
         traefik.http.routers.{{ project_name }}.rule: Host(`{{ domain | mandatory }}`)
         traefik.http.routers.{{ project_name }}-sec.rule: Host(`{{ domain | mandatory }}`)
-        traefik.docker.network: web_backend
         traefik.http.routers.{{ project_name }}-sec.tls: "true"
         traefik.http.routers.{{ project_name }}-sec.tls.certResolver: letsdns
         traefik.http.routers.{{ project_name }}-sec.middlewares: security_headers@file, authentik@file
