@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ project_name }}-env
+data:
+  TZ: "Europe/Berlin"
+  APP_URL: {{ bookstack_config.app_url | mandatory }}
+  DB_HOST: {{ db_hostname }}
+  DB_USERNAME: {{ bookstack_config.db_user }}
+  DB_DATABASE: {{ project_name }}
+{% for key, value in bookstack_config.additional.items() %}
+  {{ key }}: {{ value }}
+{% endfor %}
