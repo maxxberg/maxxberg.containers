@@ -28,13 +28,18 @@
         data: |
           apiVersion: v1
           data:
-          {% for secret in podman_service_deploy_config.secrets %}
+          {% for secret in podman_service_deploy_config.get('secrets', []) %}
             {{ secret.name }}: {{ secret.value | b64encode }}
+          {% endfor %}
+          {% for key, value in podman_service_deploy_config.get('secrets_dict', {}).items() %}
+            {{ key }}: {{ value | b64encode }}
           {% endfor %}
           kind: Secret
           metadata:
             name: {{ project_name }}_secrets
-      when: podman_service_deploy_config.secrets is defined and podman_service_deploy_config.secrets|length > 0
+      when: |
+       (podman_service_deploy_config.secrets is defined and podman_service_deploy_config.secrets|length > 0)
+        or (podman_service_deploy_config.secrets_dict is defined and podman_service_deploy_config.secrets_dict|length > 0)
 
     - name: Create volumes
       containers.podman.podman_volume:
