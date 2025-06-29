@@ -48,11 +48,6 @@ spec:
               name: {{ ext }}
               readonly: true
 {% endfor %}
-        - name: memcached
-          image: docker.io/memcached:alpine
-          args: ["-d", "-l", "127.0.0.1", "-p", "11211", "-m", "{{ mediawiki_cache }}"]
-          environment:
-            TZ: {{ mediawiki_tz }}
       volumes:
         - name: images
           persistentVolumeClaim:
