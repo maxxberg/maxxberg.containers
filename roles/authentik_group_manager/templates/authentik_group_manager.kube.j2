@@ -19,7 +19,7 @@ spec:
       name: {{ project_name }}
     spec:
       containers:
-        - name: influxdb
+        - name: agm
           image: "ghcr.io/maxxberg/authentik_group_manager:{{ authentik_group_manager_image_tag | default('latest') }}"
           env:
             - name: AGM_API_HOST
