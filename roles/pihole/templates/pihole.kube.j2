@@ -15,6 +15,12 @@ spec:
     metadata:
       labels:
         app: {{ project_name }}
+{% if pihole_is_home_network==true %}
+        traefik.enable: "true"
+        traefik.http.services.{{ project_name }}.loadbalancer.server.port: "80"
+        traefik.docker.network: web_backend
+        traefik.http.routers.{{ project_name }}.rule: Host(`pi.hole`)
+{% endif %}
       name: {{ project_name }}
     spec:
       containers:
