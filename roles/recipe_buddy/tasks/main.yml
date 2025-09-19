@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: MIT-0
+---
+# tasks file for recipe-buddy
+
+- name: Set project base name
+  ansible.builtin.set_fact:
+    project_base_name: recipe-buddy
+
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_name: "{{ project_base_name }}{{ project_suffix | default('') }}"
+
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_dir: "{{ ansible_user_dir }}/podman/{{ project_name }}"
+
+- name: Workaround for lazy evaluation
+  ansible.builtin.set_fact:
+    podman_service_deploy_config:
+      networks:
+        - name: "{{ project_name }}_default"
+          internal: false
+        - name: "{{ backend_network }}"
+          internal: true
+      secrets: []
+      volumes:
+        - "{{ project_name }}-config"
+      kube_files:
+        - "{{ lookup('ansible.builtin.template', 'recipe-buddy.kube.j2') }}"
+
+- name: Podman service deployment
+  ansible.builtin.include_role:
+    name: podman_service_deploy
