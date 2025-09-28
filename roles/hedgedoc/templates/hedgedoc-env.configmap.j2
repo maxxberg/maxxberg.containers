@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ project_name }}-env
+data:
+  TZ: "Europe/Berlin"
+  PUID: 1000
+  GUID: 1000
+  DB_HOST: {{ db_hostname }}
+  DB_USER: {{ hedgedoc_config.db_user }}
+  DB_NAME: {{ project_name }}
+  CMD_DB_DIALECT: mariadb
+  CMD_DOMAIN: {{ domain | mandatory }}
+  CMD_IMAGE_UPLOAD_TYPE: {{ hedgedoc_config.upload_type | default('filesystem') }}
+{% for key, value in hedgedoc_config.additional.items() %}
+  {{ key }}: {{ value }}
+{% endfor %}
