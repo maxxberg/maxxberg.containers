@@ -27,7 +27,7 @@
           internal: true
       secrets:
         - name: smtp_password
-          value: "{{ vaultwarden_vaultwarden_smtp_password | default() }}"
+          value: "{{ vaultwarden_smtp_password | default() }}"
         - name: admin_token
           value: "{{ vaultwarden_admin_token }}"
       volumes:
