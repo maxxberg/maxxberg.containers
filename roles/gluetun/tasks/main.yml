@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: MIT-0
+---
+# tasks file for gluetun
+
+- name: Set project base name
+  ansible.builtin.set_fact:
+    project_base_name: gluetun
+
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_name: "{{ project_base_name }}{{ project_suffix | default('') }}"
+
+- name: Set Project variables
+  ansible.builtin.set_fact:
+    project_dir: "{{ ansible_user_dir }}/podman/{{ project_name }}"
+
+- name: Workaround for lazy evaluation
+  ansible.builtin.set_fact:
+    podman_service_deploy_config:
+      networks:
+        - name: "{{ gluetun.vpn_network }}"
+          internal: false
+          subnet: 172.99.0.0/16
+          gateway: 172.99.0.1
+      secrets:
+        - name: WIREGUARD_PRIVATE_KEY
+          value: "{{ gluetun.WIREGUARD_PRIVATE_KEY }}"
+      volumes: []
+      kube_files:
+        - "{{ lookup('ansible.builtin.template', 'gluetun.kube.j2') }}"
+        - "{{ lookup('ansible.builtin.template', 'gluetun.configmap.j2') }}"
+
+- name: Podman service deployment
+  ansible.builtin.include_role:
+    name: podman_service_deploy
