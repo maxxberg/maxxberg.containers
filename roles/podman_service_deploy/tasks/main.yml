@@ -19,6 +19,7 @@
         name: "{{ item.name }}"
         internal: "{{ item.internal }}"
         subnet: "{{ item.subnet | default(omit) }}"
+        gateway: "{{ item.gateway | default(omit) }}"
         state: present
       with_items: "{{ podman_service_deploy_config.networks }}"
 
