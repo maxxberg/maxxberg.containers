@@ -5,6 +5,7 @@ metadata:
   annotations:
     io.podman.annotations.ulimit: nproc=4194304:4194304
     io.containers.autoupdate: registry
+    io.podman.annotations.log-driver/docker_proxy: "none"
   labels:
     app: {{ project_name }}
   name: {{ project_name }}
