@@ -18,3 +18,6 @@ data:
     SMTP_USERNAME: {{ vaultwarden_smtp_username | default() }}
     SMTP_TIMEOUT: {{ vaultwarden_smtp_timeout | default("15") }}
 {% endif %}
+{% for key, value in vaultwarden.additional_settings.items() %}
+    {{ key }}: {{ value }}
+{% endfor %}
