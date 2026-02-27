@@ -24,6 +24,8 @@
       networks:
         - name: "{{ project_name }}_default"
           internal: false
+        - name: "{{ backend_network }}"
+          internal: true
         - name: intranet
           internal: true
           subnet: "{{ intranet_network | mandatory }}"
