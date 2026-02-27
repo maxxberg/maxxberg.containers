@@ -51,7 +51,7 @@
         user: "{{ paperless_db_user }}"
         password: "{{ paperless_db_password }}"
         root_password: "{{ paperless_db_root_password }}"
-        image_tag: "{{ paperless_mariadb_image_tag | default(10) }}"
+        image_tag: "{{ paperless_mariadb_image_tag | default(12) }}"
 
 - name: Podman service deployment
   ansible.builtin.include_role:
