@@ -15,6 +15,9 @@ data:
       dashboard: {{ traefik_api_dashboard }}
       insecure: {{ traefik_api_insecure }}
 
+    log:
+      filePath: "/logs/app.log"
+      level: warn
     accessLog:
       filePath: "/logs/traefik.log"
       format: json
